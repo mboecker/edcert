@@ -4,6 +4,10 @@ name = "edcert"
 version = "2.0.0"
 authors = [ "Marvin Böcker <marvin.boecker@udo.edu>" ]
 
+[dependencies]
+chrono = "0.2"
+rust-crypto = "^0.2"
+
 [[bin]]
 
 name = "edcert"
