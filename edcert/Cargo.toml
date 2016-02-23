@@ -5,8 +5,12 @@ version = "2.0.0"
 authors = [ "Marvin Böcker <marvin.boecker@udo.edu>" ]
 
 [dependencies]
-chrono = "0.2"
+time = "^0.1"
+chrono = "^0.2"
+rand = "^0.3"
 rust-crypto = "^0.2"
+rustc-serialize = "^0.3"
+sodiumoxide = "^0.0.9"
 
 [[bin]]
 

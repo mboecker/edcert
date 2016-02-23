@@ -1,5 +1,9 @@
 use std::collections::BTreeMap;
+use rustc_serialize::json;
+use rustc_serialize::Encodable;
+use rustc_serialize::Encoder;
 
+#[derive(Clone)]
 pub struct Meta {
     values: BTreeMap<String, String>,
 }
@@ -42,6 +46,12 @@ impl Meta {
             copy_bytes(bytes, value_bytes, next_position, 0, value_size);
         }
     }
+}
+
+impl Encodable for Meta {
+	fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
+		self.values.encode(s)
+	}
 }
 
 /// This is a simple copy function. This should be replaced by memcpy or something...
