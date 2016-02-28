@@ -1,1 +1,0 @@
-{"rustc":288820858580682520,"target":14246054537222673308,"profile":13023446655302672390,"local":{"variant":"Precalculated","fields":["0.0.9"]},"features":"None","deps":[["libc v0.2.7",16837482460410266619],["libsodium-sys v0.0.9",14277879897766018525],["rustc-serialize v0.3.18",14696459192697064591]]}
