@@ -55,7 +55,7 @@ impl Certificate {
     pub fn get_meta_mut(&mut self) -> &mut Meta {
         &mut self.meta
     }
-    
+
     pub fn get_meta(&self) -> &Meta {
         &self.meta
     }
@@ -73,7 +73,7 @@ impl Certificate {
     pub fn has_private_key(&self) -> bool {
         self.private_key.is_some()
     }
-    
+
     pub fn get_expires(&self) -> &str {
     	&self.expires
     }
@@ -100,7 +100,7 @@ impl Certificate {
         self.signature = Some(Signature::new_without_parent(hash));
     }
 
-    /// This method verifies that the given signature is valid for the given data 
+    /// This method verifies that the given signature is valid for the given data
     pub fn verify(&self, data: &[u8], _: usize, signature: &Vec<u8>) -> bool {
         let result = ed25519::verify(data, &signature, &self.public_key);
         result
@@ -163,7 +163,7 @@ impl Certificate {
                         	Err(_) => return Err("Failed to parse expiration time"),
                         	Ok(expires) => expires.with_timezone(&chrono::UTC),
                         };
-                        
+
                         if expires > chrono::UTC::now() {
                         	Ok(())
 						} else {
@@ -192,7 +192,7 @@ impl Certificate {
             signature: None,
         }
     }
-    
+
     pub fn as_json(&self) -> Vec<u8> {
     	let jsoncode = json::encode(self).expect("Failed to encode certificate");
 		let mut compressed = lzma::compress(&jsoncode.as_bytes(), 6).expect("failed to compress");
@@ -231,7 +231,7 @@ impl Certificate {
     }
 
 	pub fn load(compressed : &[u8]) -> Result<Certificate, &'static str> {
-		
+
 		let mut bytes : Vec<u8> = Vec::new();
 		let magic : [u8; 6] = [0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00];
 		bytes.extend(compressed);
@@ -241,7 +241,7 @@ impl Certificate {
 		if o.is_err() {
 			return Err("Failed to decompress certificate");
 		}
-		
+
 		let o = String::from_utf8(o.unwrap());
 		if o.is_err() {
 			return Err("Failed to read UTF8 from decompressed vector");
@@ -299,32 +299,32 @@ fn copy_bytes(dest: &mut [u8], src: &[u8], start_dest: usize, start_src: usize, 
 
 #[test]
 fn test_generate_certificate() {
-	
+
 	use chrono::Timelike;
 	use time::Duration;
-	
+
 	let meta = Meta::new_empty();
     let expires = UTC::now()
                   .checked_add(Duration::days(90))
                   .expect("Fehler: Ein Tag konnte nicht auf heute addiert werden.")
                   .with_nanosecond(0)
                   .unwrap();
-                  
+
 	let a = Certificate::generate_random(meta, expires);
-	
+
 	let meta = Meta::new_empty();
-	
+
 	let b = Certificate::generate_random(meta, expires);
-	
+
 	assert!(a.get_public_key() != b.get_public_key());
 }
 
 #[test]
 fn test_all() {
-	
+
 	use chrono::Timelike;
 	use time::Duration;
-	
+
 	let mut meta_parent = Meta::new_empty();
     meta_parent.set("name", "Amke Root Certificate");
     meta_parent.set("use-for", "[amke.certificate-signing]");
