@@ -22,9 +22,7 @@
 
 extern crate chrono;
 extern crate time;
-extern crate crypto;
 extern crate rustc_serialize;
-extern crate rand;
 extern crate sodiumoxide;
 extern crate lzma;
 
