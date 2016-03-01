@@ -31,34 +31,43 @@ pub struct Meta {
 }
 
 impl Meta {
+    /// Creates a new Meta object, which can be used to store metadata for a certificate.
     pub fn new_empty() -> Meta {
         Meta { values: BTreeMap::new() }
     }
 
+    /// Creates a new Meta object using the given BTreeMap.
     pub fn new(values: BTreeMap<String, String>) -> Meta {
         Meta { values: values }
     }
 
+    /// This method returns true iff the key exists.
     pub fn key_exists(&self, key: &str) -> bool {
         self.get(key).is_some()
     }
 
+    /// This method returns the value of key, if it exists. Otherwise it returns None.
     pub fn get(&self, key: &str) -> Option<&String> {
         self.values.get(key)
     }
 
+    /// This method assigns a value to a given key.
     pub fn set(&mut self, key: &str, value: &str) {
         self.values.insert(key.to_string(), value.to_string());
     }
 
-	pub fn get_values_mut(&mut self) -> &mut BTreeMap<String, String> {
-		&mut self.values
-	}
+    /// This method returns a mutable reference to the tree object.
+    pub fn get_values_mut(&mut self) -> &mut BTreeMap<String, String> {
+        &mut self.values
+    }
 
-	pub fn get_values(&self) -> &BTreeMap<String, String> {
-		&self.values
-	}
+    /// This method returns a reference to the tree object.
+    pub fn get_values(&self) -> &BTreeMap<String, String> {
+        &self.values
+    }
 
+    /// This method fills the given byte vector with a "hash" which is created from all keys
+    /// and values.
     pub fn fill_bytes(&self, bytes: &mut [u8]) {
 
         let mut hash = [0; 64];
@@ -80,6 +89,7 @@ fn copy_bytes(dest: &mut [u8], src: &[u8], start_dest: usize, start_src: usize, 
     }
 }
 
+/// This method adds h2 to h1.
 fn add_hash(h1: &mut [u8], h2: &[u8]) {
     for i in 0..(h1.len()) {
         let a: u16 = ((h1[i] as u16) + (h2[i] as u16)) % 256;

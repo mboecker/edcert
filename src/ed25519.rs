@@ -22,6 +22,8 @@
 
 use sodiumoxide::crypto::sign::ed25519;
 
+/// This method generates a random ed25519 keypair from a cryptographically secure source
+/// (on unix this is /dev/urandom).
 pub fn generate_keypair() -> (Vec<u8>, Vec<u8>) {
 
     let (pk, sk) = ed25519::gen_keypair();
@@ -29,12 +31,14 @@ pub fn generate_keypair() -> (Vec<u8>, Vec<u8>) {
     let private_key = bytes_to_vec(&sk.0);
     let public_key = bytes_to_vec(&pk.0);
 
-	assert_eq!(64, private_key.len());
+    assert_eq!(64, private_key.len());
     assert_eq!(32, public_key.len());
 
     (public_key, private_key)
 }
 
+/// This method takes a data vector and a private key and computes the signature which can be
+/// verified using the public key.
 pub fn sign(data: &[u8], private_key: &Vec<u8>) -> Vec<u8> {
 
     assert_eq!(64, private_key.len());
@@ -46,6 +50,8 @@ pub fn sign(data: &[u8], private_key: &Vec<u8>) -> Vec<u8> {
     s
 }
 
+/// This method takes a data vector, a signature and a public key and returns true, if the
+/// signature has been created using the correct private key.
 pub fn verify(data: &[u8], signature: &[u8], public_key: &Vec<u8>) -> bool {
     let b = vec_to_bytes32(public_key);
     let pk = ed25519::PublicKey::from_slice(&b);
@@ -60,7 +66,6 @@ pub fn verify(data: &[u8], signature: &[u8], public_key: &Vec<u8>) -> bool {
         bytes == data
     }
 }
-
 
 fn bytes_to_vec(a: &[u8]) -> Vec<u8> {
     Vec::from(a)

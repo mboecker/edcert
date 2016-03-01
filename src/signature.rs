@@ -28,14 +28,15 @@ use rustc_serialize::Decoder;
 #[derive(Clone,RustcDecodable,RustcEncodable,Debug)]
 pub struct Signature {
     /// This is the actual signature generated with the certificate data and the parents private key
-    /// It can be validated with the parents public key
+    /// It can be validated with the parents public key.
     hash: Vec<u8>,
 
-    /// If this is None, then the Certificate is signed with the master key
+    /// If this is None, then the Certificate is signed with the master key.
     signed_by: Option<Box<Certificate>>,
 }
 
 impl Signature {
+    /// Creates a new Signature with the given parent and given signature.
     pub fn new(parent: Box<Certificate>, signature: Vec<u8>) -> Signature {
         Signature {
             hash: signature,
@@ -43,6 +44,8 @@ impl Signature {
         }
     }
 
+    /// Creates a new Signature with the given signature. It is assumed that the signature is
+    /// computed usign the master key.
     pub fn new_without_parent(signature: Vec<u8>) -> Signature {
         Signature {
             hash: signature,
@@ -50,14 +53,15 @@ impl Signature {
         }
     }
 
-    /// This method will return true iff the certificate has no parent certificate
-    /// It is then signed with the master key
+    /// This method will return true iff the certificate has no parent certificate.
+    /// It is then signed with the master key.
     pub fn is_signed_by_master(&self) -> bool {
 
         self.signed_by.is_none()
     }
 
-    /// This method will return the parent Certificate, or None, if it is signed with the master key
+    /// This method will return the parent Certificate, or None, if it is signed with the
+    /// master key.
     pub fn get_parent(&self) -> Option<&Certificate> {
         if self.signed_by.is_none() {
             None
@@ -67,7 +71,7 @@ impl Signature {
         }
     }
 
-    /// This method will return the signature given by the parent
+    /// This method will return the signature given by the parent.
     pub fn get_hash(&self) -> &Vec<u8> {
         &self.hash
     }

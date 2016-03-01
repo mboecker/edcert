@@ -10,7 +10,3 @@ chrono = "^0.2"
 rustc-serialize = "^0.3"
 sodiumoxide = "^0.0.9"
 rust-lzma = "^0.2"
-
-[[bin]]
-
-name = "edcert"

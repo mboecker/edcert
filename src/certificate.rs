@@ -31,13 +31,16 @@ use ed25519;
 use lzma;
 use chrono::UTC;
 
-/// This is the amount of bytes a single ed25519 signature takes up
+/// This is the length of a ed25519 signature.
 pub const SIGNATURE_LEN: usize = 64 + CERTIFICATE_BYTE_LEN;
 
-/// This is the amount of bytes a single key takes up.
+/// This is the length of a ed25519 private key.
 pub const PRIVATE_KEY_LEN: usize = 64;
+
+/// This is the length of a ed25519 public key.
 pub const PUBLIC_KEY_LEN: usize = 32;
 
+/// This is the length of a safehash of a certificate.
 pub const CERTIFICATE_BYTE_LEN: usize =
     25 /* expires as string */ + 64 /* hash of meta */ + PUBLIC_KEY_LEN;
 
@@ -62,7 +65,7 @@ pub struct Certificate {
 }
 
 impl Certificate {
-    /// This method generates a random public/private keypair and a certificate for it
+    /// This method generates a random public/private keypair and a certificate for it.
     pub fn generate_random(meta: Meta, expires: chrono::DateTime<chrono::UTC>) -> Certificate {
 
         let (public_key, private_key) = ed25519::generate_keypair();
@@ -76,42 +79,43 @@ impl Certificate {
         }
     }
 
-    /// This method returns a mutable reference to the meta structure
+    /// This method returns a mutable reference to the meta structure.
     pub fn get_meta_mut(&mut self) -> &mut Meta {
         &mut self.meta
     }
 
-    /// This method returns a reference to the meta structure
+    /// This method returns a reference to the meta structure.
     pub fn get_meta(&self) -> &Meta {
         &self.meta
     }
 
-    /// This method returns a reference to the public key
+    /// This method returns a reference to the public key.
     pub fn get_public_key(&self) -> &Vec<u8> {
         &self.public_key
     }
 
-    /// This method returns the private key, if it is known, or None if the certificate has been initialized without the private key
+    /// This method returns the private key, if it is known, or None if the certificate has been
+    /// initialized without the private key.
     pub fn get_private_key(&self) -> &Option<Vec<u8>> {
         &self.private_key
     }
 
-    /// This method returns true, if the private key is saved in the certificate
+    /// This method returns true, if the private key is saved in the certificate.
     pub fn has_private_key(&self) -> bool {
         self.private_key.is_some()
     }
 
-    /// This method returns the expiration date as a RFC 3339 string
+    /// This method returns the expiration date as a RFC 3339 string.
     pub fn get_expires(&self) -> &str {
         &self.expires
     }
 
-    /// This method replaces the current private key of this certificate with the given one
+    /// This method replaces the current private key of this certificate with the given one.
     pub fn set_private_key(&mut self, private_key: Vec<u8>) {
         self.private_key = Some(private_key);
     }
 
-    /// This method checks, if this certificates expiration date is now or in the past
+    /// This method checks, if this certificates expiration date is now or in the past.
     pub fn is_expired(&self) -> bool {
         let expires = match chrono::DateTime::parse_from_rfc3339(&self.expires) {
             Err(_) => return true,
@@ -138,7 +142,7 @@ impl Certificate {
         bytes
     }
 
-    /// This method returns the parent certificate of this certificate, if it exists
+    /// This method returns the parent certificate of this certificate, if it exists.
     pub fn get_parent(&self) -> Option<&Certificate> {
         if self.signature.is_some() {
             let sig = &self.signature.as_ref().unwrap();
@@ -148,12 +152,13 @@ impl Certificate {
         }
     }
 
-    /// This method returns true, if a signature exists (is not None). This doesn't validate the signature
+    /// This method returns true, if a signature exists (is not None). This doesn't validate the
+    /// signature.
     pub fn is_signed(&self) -> bool {
         self.signature.is_some()
     }
 
-    /// This method signs the given data and returns the signature
+    /// This method signs the given data and returns the signature.
     pub fn sign(&self, data: &[u8]) -> Option<Vec<u8>> {
         if self.has_private_key() {
 
@@ -165,14 +170,14 @@ impl Certificate {
         }
     }
 
-    /// This method signs this certificate with the given private master key
+    /// This method signs this certificate with the given private master key.
     pub fn sign_with_master(&mut self, master_private_key: &Vec<u8>) {
         let bytes = self.safehash();
         let hash = ed25519::sign(&bytes, master_private_key);
         self.signature = Some(Signature::new_without_parent(hash));
     }
 
-    /// This method signs another certificate with the private key of this certificate
+    /// This method signs another certificate with the private key of this certificate.
     pub fn sign_certificate(&self, other: &mut Certificate) -> Result<(), &'static str> {
 
         if self.has_private_key() {
@@ -189,7 +194,7 @@ impl Certificate {
         }
     }
 
-    /// This method verifies that this certificate is valid by analyzing the trust chain
+    /// This method verifies that this certificate is valid by analyzing the trust chain.
     pub fn is_valid(&self, master_pk: &Vec<u8>) -> Result<(), &'static str> {
         if !self.is_signed() {
             Err("This certificate isn't signed, so it can't be valid.")
@@ -235,13 +240,13 @@ impl Certificate {
         }
     }
 
-    /// This method verifies that the given signature is valid for the given data
+    /// This method verifies that the given signature is valid for the given data.
     pub fn verify(&self, data: &[u8], _: usize, signature: &Vec<u8>) -> bool {
         let result = ed25519::verify(data, &signature, &self.public_key);
         result
     }
 
-    /// takes a json-encoded byte vector and tries to create a certificate from it
+    /// takes a json-encoded byte vector and tries to create a certificate from it.
     pub fn from_json(compressed: &[u8]) -> Result<Certificate, &'static str> {
 
         let mut bytes: Vec<u8> = Vec::new();
@@ -267,7 +272,7 @@ impl Certificate {
         }
     }
 
-    /// Converts this certificate in a json-encoded byte vector
+    /// Converts this certificate in a json-encoded byte vector.
     pub fn as_json(&self) -> Vec<u8> {
         let jsoncode = json::encode(self).expect("Failed to encode certificate");
         let mut compressed = lzma::compress(&jsoncode.as_bytes(), 6).expect("failed to compress");
@@ -276,7 +281,8 @@ impl Certificate {
         compressed
     }
 
-    /// Saves this certificate into a folder: one file for the certificate and one file for the private key
+    /// Saves this certificate into a folder: one file for the certificate and one file for the
+    /// private key.
     pub fn save(&self, folder: &str) {
         use std::fs::File;
         use std::fs::DirBuilder;
@@ -305,7 +311,7 @@ impl Certificate {
                         .expect("Failed to write certificate file.");
     }
 
-    /// This method loads a certificate from a folder
+    /// This method loads a certificate from a folder.
     pub fn load_from_file(filename: &str) -> Result<Certificate, &'static str> {
 
         use std::fs::File;
@@ -319,7 +325,7 @@ impl Certificate {
         Certificate::from_json(&*compressed)
     }
 
-    /// This method reads a privtae key from a file and sets it in this certificate
+    /// This method reads a privtae key from a file and sets it in this certificate.
     pub fn load_private_key(&mut self, filename: &str) -> Result<(), &'static str> {
         use std::fs::File;
         use std::io::Read;
