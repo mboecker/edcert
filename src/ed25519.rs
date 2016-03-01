@@ -90,11 +90,11 @@ fn test_ed25519_simple() {
     println!("signature: {:?}", sig);
     println!("");
 
-    sig[0] -= 1;
+    sig[0] = ((sig[0] as u16 + 1) % 256) as u8;
 
     assert_eq!(verify(&msg, &sig, &pk), false);
 
-    sig[0] += 1;
+    sig[0] = ((sig[0] as u16 - 1) % 256) as u8;
 
     assert_eq!(verify(&msg, &sig, &pk), true);
 }
@@ -112,11 +112,11 @@ fn test_ed25519_shortmsg() {
     println!("signature: {:?}", sig);
     println!("");
 
-    sig[0] -= 1;
+    sig[0] = ((sig[0] as u16 + 1) % 256) as u8;
 
     assert_eq!(verify(&msg, &sig, &pk), false);
 
-    sig[0] += 1;
+    sig[0] = ((sig[0] as u16 - 1) % 256) as u8;
 
     assert_eq!(verify(&msg, &sig, &pk), true);
 }
