@@ -10,6 +10,8 @@ Edcert is a simple library for certification and authentication of data.
 4. Transmit your certificates in a json-encoded format over the network.
 5. Sign and verify data with the certificates using the ".sign" and ".verify" methods.
 
+The design uses the "super-secure, superfast" elliptic curve Ed25519, which you can learn more about here: https://ed25519.cr.yp.to/
+
 ## License
 
 MIT
