@@ -62,26 +62,31 @@ pub struct Certificate {
 }
 
 impl Certificate {
-    //    pub fn new(public_key: Vec<u8>,
-    //               expires: chrono::DateTime<chrono::UTC>)
-    //               -> Certificate {
-    //        Certificate {
-    //            meta: Meta::new(),
-    //            signature: None,
-    //            public_key: public_key,
-    //            private_key: None,
-    //            expires: expires,
-    //        }
-    //    }
+    /// This method generates a random public/private keypair and a certificate for it
+    pub fn generate_random(meta: Meta, expires: chrono::DateTime<chrono::UTC>) -> Certificate {
 
+        let (public_key, private_key) = ed25519::generate_keypair();
+
+        Certificate {
+            private_key: Some(private_key),
+            public_key: public_key,
+            expires: expires.to_rfc3339(),
+            meta: meta,
+            signature: None,
+        }
+    }
+
+    /// This method returns a mutable reference to the meta structure
     pub fn get_meta_mut(&mut self) -> &mut Meta {
         &mut self.meta
     }
 
+    /// This method returns a reference to the meta structure
     pub fn get_meta(&self) -> &Meta {
         &self.meta
     }
 
+    /// This method returns a reference to the public key
     pub fn get_public_key(&self) -> &Vec<u8> {
         &self.public_key
     }
@@ -96,10 +101,54 @@ impl Certificate {
         self.private_key.is_some()
     }
 
+    /// This method returns the expiration date as a RFC 3339 string
     pub fn get_expires(&self) -> &str {
-    	&self.expires
+        &self.expires
     }
 
+    /// This method replaces the current private key of this certificate with the given one
+    pub fn set_private_key(&mut self, private_key: Vec<u8>) {
+        self.private_key = Some(private_key);
+    }
+
+    /// This method checks, if this certificates expiration date is now or in the past
+    pub fn is_expired(&self) -> bool {
+        let expires = match chrono::DateTime::parse_from_rfc3339(&self.expires) {
+            Err(_) => return true,
+            Ok(expires) => expires.with_timezone(&chrono::UTC),
+        };
+
+        if expires > chrono::UTC::now() {
+            false
+        } else {
+            true
+        }
+    }
+
+    /// This method returns a "hash". This is used to validate the certificate.
+    /// All relevant information of the certificate is used to produce the hash,
+    /// including the public key, meta data and the expiration date.
+    pub fn safehash(&self) -> [u8; CERTIFICATE_BYTE_LEN] {
+        let mut bytes = [0; CERTIFICATE_BYTE_LEN];
+
+        self.meta.fill_bytes(&mut bytes[0..64]);
+        copy_bytes(&mut bytes[64..], self.expires.as_bytes(), 0, 0, 25);
+        copy_bytes(&mut bytes[89..], &*self.public_key, 0, 0, PUBLIC_KEY_LEN);
+
+        bytes
+    }
+
+    /// This method returns the parent certificate of this certificate, if it exists
+    pub fn get_parent(&self) -> Option<&Certificate> {
+        if self.signature.is_some() {
+            let sig = &self.signature.as_ref().unwrap();
+            sig.get_parent()
+        } else {
+            None
+        }
+    }
+
+    /// This method returns true, if a signature exists (is not None). This doesn't validate the signature
     pub fn is_signed(&self) -> bool {
         self.signature.is_some()
     }
@@ -116,38 +165,27 @@ impl Certificate {
         }
     }
 
+    /// This method signs this certificate with the given private master key
     pub fn sign_with_master(&mut self, master_private_key: &Vec<u8>) {
-        let bytes = self.as_bytes();
+        let bytes = self.safehash();
         let hash = ed25519::sign(&bytes, master_private_key);
         self.signature = Some(Signature::new_without_parent(hash));
     }
 
-    /// This method verifies that the given signature is valid for the given data
-    pub fn verify(&self, data: &[u8], _: usize, signature: &Vec<u8>) -> bool {
-        let result = ed25519::verify(data, &signature, &self.public_key);
-        result
-    }
+    /// This method signs another certificate with the private key of this certificate
+    pub fn sign_certificate(&self, other: &mut Certificate) -> Result<(), &'static str> {
 
-    pub fn as_bytes(&self) -> [u8; CERTIFICATE_BYTE_LEN] {
-        let mut bytes = [0; CERTIFICATE_BYTE_LEN];
+        if self.has_private_key() {
+            let child_bytes = other.safehash();
+            let signature_bytes = self.sign(&child_bytes).unwrap().to_vec();
+            let parent = Box::new(self.clone());
+            let signature = Signature::new(parent, signature_bytes);
 
-        self.meta.fill_bytes(&mut bytes[0..64]);
-        copy_bytes(&mut bytes[64..],
-                   self.expires.as_bytes(),
-                   0,
-                   0,
-                   25);
-        copy_bytes(&mut bytes[89..], &*self.public_key, 0, 0, PUBLIC_KEY_LEN);
+            other.signature = Some(signature);
 
-        bytes
-    }
-
-    pub fn get_parent(&self) -> Option<&Certificate> {
-        if self.signature.is_some() {
-            let sig = &self.signature.as_ref().unwrap();
-            sig.get_parent()
+            Ok(())
         } else {
-            None
+            Err("This certificate has no private key")
         }
     }
 
@@ -156,7 +194,7 @@ impl Certificate {
         if !self.is_signed() {
             Err("This certificate isn't signed, so it can't be valid.")
         } else {
-            let bytes: [u8; CERTIFICATE_BYTE_LEN] = self.as_bytes();
+            let bytes: [u8; CERTIFICATE_BYTE_LEN] = self.safehash();
 
             let signature = self.signature.as_ref().expect("lel");
 
@@ -166,9 +204,11 @@ impl Certificate {
 
                 if r {
 
-                    // FIXME: hier expires checken
-
-                    Ok(())
+                    if self.is_expired() {
+                        Err("This certificate is expired")
+                    } else {
+                        Ok(())
+                    }
                 } else {
                     Err("Failed to verify master signature")
                 }
@@ -180,17 +220,11 @@ impl Certificate {
 
                 if sign_real {
                     if parent_real {
-
-                        let expires = match chrono::DateTime::parse_from_rfc3339(&self.expires) {
-                        	Err(_) => return Err("Failed to parse expiration time"),
-                        	Ok(expires) => expires.with_timezone(&chrono::UTC),
-                        };
-
-                        if expires > chrono::UTC::now() {
-                        	Ok(())
-						} else {
-							Err("The certificate is expired")
-						}
+                        if !self.is_expired() {
+                            Ok(())
+                        } else {
+                            Err("The certificate is expired")
+                        }
                     } else {
                         Err("The parent is invalid.")
                     }
@@ -201,26 +235,45 @@ impl Certificate {
         }
     }
 
-    /// This method generates a random public/private keypair and a certificate for it
-    pub fn generate_random(meta: Meta, expires: chrono::DateTime<chrono::UTC>) -> Certificate {
+    /// This method verifies that the given signature is valid for the given data
+    pub fn verify(&self, data: &[u8], _: usize, signature: &Vec<u8>) -> bool {
+        let result = ed25519::verify(data, &signature, &self.public_key);
+        result
+    }
 
-        let (public_key, private_key) = ed25519::generate_keypair();
+    /// takes a json-encoded byte vector and tries to create a certificate from it
+    pub fn from_json(compressed: &[u8]) -> Result<Certificate, &'static str> {
 
-        Certificate {
-            private_key: Some(private_key),
-            public_key: public_key,
-            expires: expires.to_rfc3339(),
-            meta: meta,
-            signature: None,
+        let mut bytes: Vec<u8> = Vec::new();
+        let magic: [u8; 6] = [0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00];
+        bytes.extend(compressed);
+        copy_bytes(&mut bytes[0..7], &magic, 0, 0, 6);
+
+        let o = lzma::decompress(&bytes[..]);
+        if o.is_err() {
+            return Err("Failed to decompress certificate");
+        }
+
+        let o = String::from_utf8(o.unwrap());
+        if o.is_err() {
+            return Err("Failed to read UTF8 from decompressed vector");
+        }
+
+        let o = json::decode(&o.unwrap());
+        if o.is_err() {
+            Err("Failed to decode JSON")
+        } else {
+            Ok(o.unwrap())
         }
     }
 
+    /// Converts this certificate in a json-encoded byte vector
     pub fn as_json(&self) -> Vec<u8> {
-    	let jsoncode = json::encode(self).expect("Failed to encode certificate");
-		let mut compressed = lzma::compress(&jsoncode.as_bytes(), 6).expect("failed to compress");
-		let magic = "edcert".as_bytes();
-		copy_bytes(&mut compressed[0..6], magic, 0, 0, 6);
-		compressed
+        let jsoncode = json::encode(self).expect("Failed to encode certificate");
+        let mut compressed = lzma::compress(&jsoncode.as_bytes(), 6).expect("failed to compress");
+        let magic = "edcert".as_bytes();
+        copy_bytes(&mut compressed[0..6], magic, 0, 0, 6);
+        compressed
     }
 
     /// Saves this certificate into a folder: one file for the certificate and one file for the private key
@@ -247,68 +300,37 @@ impl Certificate {
         let mut certificate_file: File = File::create(folder + "/certificate.ec")
                                              .expect("Failed to create certificate file.");
 
-		let compressed = self.as_json();
+        let compressed = self.as_json();
         certificate_file.write(&*compressed)
                         .expect("Failed to write certificate file.");
     }
 
-	pub fn load(compressed : &[u8]) -> Result<Certificate, &'static str> {
-
-		let mut bytes : Vec<u8> = Vec::new();
-		let magic : [u8; 6] = [0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00];
-		bytes.extend(compressed);
-		copy_bytes(&mut bytes[0..7], &magic,0,0,6);
-
-		let o = lzma::decompress(&bytes[..]);
-		if o.is_err() {
-			return Err("Failed to decompress certificate");
-		}
-
-		let o = String::from_utf8(o.unwrap());
-		if o.is_err() {
-			return Err("Failed to read UTF8 from decompressed vector");
-		}
-
-        let o = json::decode(&o.unwrap());
-        if o.is_err() {
-        	Err("Failed to decode JSON")
-        }
-        else
-        {
-        	Ok(o.unwrap())
-        }
-	}
-
     /// This method loads a certificate from a folder
-    pub fn load_from_folder(folder: &str) -> Result<Certificate, &'static str> {
+    pub fn load_from_file(filename: &str) -> Result<Certificate, &'static str> {
 
         use std::fs::File;
-        // use std::fs::DirBuilder;
         use std::io::Read;
 
-        let folder: String = folder.to_string();
-        let mut certificate_file: File = File::open(folder + "/certificate.ec")
+        let filename: String = filename.to_string();
+        let mut certificate_file: File = File::open(filename)
                                              .expect("Failed to open certificate file.");
         let mut compressed = Vec::new();
         certificate_file.read_to_end(&mut compressed).expect("Failed to read certificate");
-		Certificate::load(&*compressed)
+        Certificate::from_json(&*compressed)
     }
 
-    /// This method signs another certificate with the private key of this certificate
-    pub fn sign_certificate(&self, other: &mut Certificate) -> Result<(), &'static str> {
+    /// This method reads a privtae key from a file and sets it in this certificate
+    pub fn load_private_key(&mut self, filename: &str) -> Result<(), &'static str> {
+        use std::fs::File;
+        use std::io::Read;
 
-        if self.has_private_key() {
-            let child_bytes = other.as_bytes();
-            let signature_bytes = self.sign(&child_bytes).unwrap().to_vec();
-            let parent = Box::new(self.clone());
-            let signature = Signature::new(parent, signature_bytes);
-
-            other.signature = Some(signature);
-
-            Ok(())
-        } else {
-            Err("This certificate has no private key")
-        }
+        let filename: String = filename.to_string();
+        let mut private_key_file: File = File::open(filename)
+                                             .expect("Failed to open private kye file.");
+        let mut private_key = Vec::new();
+        private_key_file.read_to_end(&mut private_key).expect("Failed to read private key");
+        self.set_private_key(private_key);
+        Ok(())
     }
 }
 
@@ -321,33 +343,32 @@ fn copy_bytes(dest: &mut [u8], src: &[u8], start_dest: usize, start_src: usize, 
 
 #[test]
 fn test_generate_certificate() {
+    use chrono::Timelike;
+    use time::Duration;
 
-	use chrono::Timelike;
-	use time::Duration;
-
-	let meta = Meta::new_empty();
+    let meta = Meta::new_empty();
     let expires = UTC::now()
-                  .checked_add(Duration::days(90))
-                  .expect("Fehler: Ein Tag konnte nicht auf heute addiert werden.")
-                  .with_nanosecond(0)
-                  .unwrap();
+                      .checked_add(Duration::days(90))
+                      .expect("Fehler: Ein Tag konnte nicht auf heute addiert werden.")
+                      .with_nanosecond(0)
+                      .unwrap();
 
-	let a = Certificate::generate_random(meta, expires);
+    let a = Certificate::generate_random(meta, expires);
 
-	let meta = Meta::new_empty();
+    let meta = Meta::new_empty();
 
-	let b = Certificate::generate_random(meta, expires);
+    let b = Certificate::generate_random(meta, expires);
 
-	assert!(a.get_public_key() != b.get_public_key());
+    assert!(a.get_public_key() != b.get_public_key());
 }
 
 #[test]
 fn test_all() {
 
-	use chrono::Timelike;
-	use time::Duration;
+    use chrono::Timelike;
+    use time::Duration;
 
-	let mut meta_parent = Meta::new_empty();
+    let mut meta_parent = Meta::new_empty();
     meta_parent.set("name", "Amke Root Certificate");
     meta_parent.set("use-for", "[amke.certificate-signing]");
     let meta_parent = meta_parent;
@@ -372,16 +393,19 @@ fn test_all() {
 
     parent.sign_certificate(&mut child).expect("Failed to sign child!");
 
-    let time_str = UTC::now().with_nanosecond(0).unwrap().to_rfc3339();
+    let time_str: String = UTC::now().with_nanosecond(0).unwrap().to_rfc3339();
 
-    println!("Ist Child valid? {:?}", child.is_valid(&master_pk));
+    let certfilename = time_str.clone() + "/certificate.ec";
+    let prvkeyfilename = time_str.clone() + "/private.key";
+
+    assert!(child.is_valid(&master_pk).is_ok());
 
     child.save(&time_str);
 
-    child = Certificate::load_from_folder(&time_str).expect("Failed to load certificate");
+    child = Certificate::load_from_file(&certfilename).expect("Failed to load certificate");
+    child.load_private_key(&prvkeyfilename).expect("Failed to load private key");
 
-    println!("Ist Child nach laden noch valid? {:?}",
-             child.is_valid(&master_pk));
+    assert!(child.is_valid(&master_pk).is_ok());
 
     child.save(&time_str);
 }
