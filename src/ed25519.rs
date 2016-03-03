@@ -22,6 +22,12 @@
 
 use sodiumoxide::crypto::sign::ed25519;
 
+/// This is the length of a ed25519 private key.
+pub const PRIVATE_KEY_LEN: usize = 64;
+
+/// This is the length of a ed25519 public key.
+pub const PUBLIC_KEY_LEN: usize = 32;
+
 /// This method generates a random ed25519 keypair from a cryptographically secure source
 /// (on unix this is /dev/urandom).
 pub fn generate_keypair() -> (Vec<u8>, Vec<u8>) {

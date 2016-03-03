@@ -35,10 +35,10 @@ use chrono::UTC;
 pub const SIGNATURE_LEN: usize = 64 + CERTIFICATE_BYTE_LEN;
 
 /// This is the length of a ed25519 private key.
-pub const PRIVATE_KEY_LEN: usize = 64;
+pub use ed25519::PRIVATE_KEY_LEN;
 
 /// This is the length of a ed25519 public key.
-pub const PUBLIC_KEY_LEN: usize = 32;
+pub use ed25519::PUBLIC_KEY_LEN;
 
 /// This is the length of a safehash of a certificate.
 pub const CERTIFICATE_BYTE_LEN: usize =
