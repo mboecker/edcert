@@ -29,7 +29,6 @@ use rustc_serialize::Decoder;
 use chrono;
 use ed25519;
 use lzma;
-use chrono::UTC;
 
 /// This is the length of a ed25519 signature.
 pub const SIGNATURE_LEN: usize = 64 + CERTIFICATE_BYTE_LEN;
@@ -68,7 +67,12 @@ impl Certificate {
     /// This method generates a random public/private keypair and a certificate for it.
     pub fn generate_random(meta: Meta, expires: chrono::DateTime<chrono::UTC>) -> Certificate {
 
-        let (public_key, private_key) = ed25519::generate_keypair();
+        let (pubslice, prvslice) = ed25519::generate_keypair();
+
+        let mut public_key = Vec::new();
+        public_key.extend_from_slice(&pubslice[..]);
+        let mut private_key = Vec::new();
+        private_key.extend_from_slice(&prvslice[..]);
 
         Certificate {
             private_key: Some(private_key),
@@ -161,25 +165,22 @@ impl Certificate {
     /// This method signs the given data and returns the signature.
     pub fn sign(&self, data: &[u8]) -> Option<Vec<u8>> {
         if self.has_private_key() {
-
-            let signature = ed25519::sign(data, &self.private_key.as_ref().unwrap());
+            let signature = ed25519::sign(data, self.private_key.as_ref().unwrap());
             Some(signature)
-
         } else {
             None
         }
     }
 
     /// This method signs this certificate with the given private master key.
-    pub fn sign_with_master(&mut self, master_private_key: &Vec<u8>) {
+    pub fn sign_with_master(&mut self, master_private_key: &[u8]) {
         let bytes = self.safehash();
-        let hash = ed25519::sign(&bytes, master_private_key);
+        let hash = ed25519::sign(&bytes[..], master_private_key);
         self.signature = Some(Signature::new_without_parent(hash));
     }
 
     /// This method signs another certificate with the private key of this certificate.
     pub fn sign_certificate(&self, other: &mut Certificate) -> Result<(), &'static str> {
-
         if self.has_private_key() {
             let child_bytes = other.safehash();
             let signature_bytes = self.sign(&child_bytes).unwrap().to_vec();
@@ -195,17 +196,19 @@ impl Certificate {
     }
 
     /// This method verifies that this certificate is valid by analyzing the trust chain.
-    pub fn is_valid(&self, master_pk: &Vec<u8>) -> Result<(), &'static str> {
+    pub fn is_valid(&self, master_pk: &[u8]) -> Result<(), &'static str> {
         if !self.is_signed() {
             Err("This certificate isn't signed, so it can't be valid.")
         } else {
-            let bytes: [u8; CERTIFICATE_BYTE_LEN] = self.safehash();
+            let bytes: &[u8] = &self.safehash()[..];
 
-            let signature = self.signature.as_ref().expect("lel");
+            let signature = self.signature.as_ref().unwrap();
 
             if signature.is_signed_by_master() {
 
-                let r = ed25519::verify(&bytes, signature.get_hash(), master_pk);
+                let hash = signature.get_hash();
+
+                let r = ed25519::verify(bytes, hash, master_pk);
 
                 if r {
 
@@ -220,7 +223,7 @@ impl Certificate {
 
             } else {
                 let parent: &Certificate = signature.get_parent().unwrap();
-                let sign_real = parent.verify(&bytes, CERTIFICATE_BYTE_LEN, &signature.get_hash());
+                let sign_real = parent.verify(bytes, &signature.get_hash());
                 let parent_real = parent.is_valid(&master_pk).is_ok();
 
                 if sign_real {
@@ -241,8 +244,8 @@ impl Certificate {
     }
 
     /// This method verifies that the given signature is valid for the given data.
-    pub fn verify(&self, data: &[u8], _: usize, signature: &Vec<u8>) -> bool {
-        let result = ed25519::verify(data, &signature, &self.public_key);
+    pub fn verify(&self, data: &[u8], signature: &[u8]) -> bool {
+        let result = ed25519::verify(data, signature, &self.public_key);
         result
     }
 
@@ -311,7 +314,7 @@ impl Certificate {
                         .expect("Failed to write certificate file.");
     }
 
-    /// This method loads a certificate from a folder.
+    /// This method loads a certificate from a file.
     pub fn load_from_file(filename: &str) -> Result<Certificate, &'static str> {
 
         use std::fs::File;
@@ -325,7 +328,7 @@ impl Certificate {
         Certificate::from_json(&*compressed)
     }
 
-    /// This method reads a privtae key from a file and sets it in this certificate.
+    /// This method reads a private key from a file and sets it in this certificate.
     pub fn load_private_key(&mut self, filename: &str) -> Result<(), &'static str> {
         use std::fs::File;
         use std::io::Read;
@@ -350,6 +353,7 @@ fn copy_bytes(dest: &mut [u8], src: &[u8], start_dest: usize, start_src: usize, 
 #[test]
 fn test_generate_certificate() {
     use chrono::Timelike;
+    use chrono::UTC;
     use time::Duration;
 
     let meta = Meta::new_empty();
@@ -370,7 +374,7 @@ fn test_generate_certificate() {
 
 #[test]
 fn test_all() {
-
+    use chrono::UTC;
     use chrono::Timelike;
     use time::Duration;
 
