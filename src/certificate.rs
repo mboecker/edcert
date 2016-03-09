@@ -66,14 +66,17 @@ pub struct Certificate {
 impl Certificate {
     /// This method generates a random public/private keypair and a certificate for it.
     pub fn generate_random(meta: Meta, expires: chrono::DateTime<chrono::UTC>) -> Certificate {
-
+        // generate a keypair. this returns two arrays
         let (pubslice, prvslice) = ed25519::generate_keypair();
 
+        // convert the arrays to vectors
         let mut public_key = Vec::new();
-        public_key.extend_from_slice(&pubslice[..]);
         let mut private_key = Vec::new();
+
+        public_key.extend_from_slice(&pubslice[..]);
         private_key.extend_from_slice(&prvslice[..]);
 
+        // create the certificate
         Certificate {
             private_key: Some(private_key),
             public_key: public_key,
@@ -121,26 +124,32 @@ impl Certificate {
 
     /// This method checks, if this certificates expiration date is now or in the past.
     pub fn is_expired(&self) -> bool {
+
+        // try to parse the string of this certificate
         let expires = match chrono::DateTime::parse_from_rfc3339(&self.expires) {
             Err(_) => return true,
             Ok(expires) => expires.with_timezone(&chrono::UTC),
         };
 
-        if expires > chrono::UTC::now() {
-            false
-        } else {
-            true
-        }
+        // if the parsing is ok, then this must be true for the certificate to be expired
+        expires <= chrono::UTC::now()
     }
 
     /// This method returns a "hash". This is used to validate the certificate.
     /// All relevant information of the certificate is used to produce the hash,
     /// including the public key, meta data and the expiration date.
     pub fn safehash(&self) -> [u8; CERTIFICATE_BYTE_LEN] {
+
+        // create a array of this length
         let mut bytes = [0; CERTIFICATE_BYTE_LEN];
 
+        // first 64 bytes are a sha512 hash of meta. the ordering of meta entries is irrelevant
         self.meta.fill_bytes(&mut bytes[0..64]);
+
+        // next 25 bytes are string representation of the expiration string
         copy_bytes(&mut bytes[64..], self.expires.as_bytes(), 0, 0, 25);
+
+        // finally, the public key is appended
         copy_bytes(&mut bytes[89..], &*self.public_key, 0, 0, PUBLIC_KEY_LEN);
 
         bytes
@@ -148,7 +157,7 @@ impl Certificate {
 
     /// This method returns the parent certificate of this certificate, if it exists.
     pub fn get_parent(&self) -> Option<&Certificate> {
-        if self.signature.is_some() {
+        if self.is_signed() {
             let sig = &self.signature.as_ref().unwrap();
             sig.get_parent()
         } else {
@@ -176,7 +185,7 @@ impl Certificate {
     pub fn sign_with_master(&mut self, master_private_key: &[u8]) {
         let bytes = self.safehash();
         let hash = ed25519::sign(&bytes[..], master_private_key);
-        self.signature = Some(Signature::new_without_parent(hash));
+        self.signature = Some(Signature::new(hash));
     }
 
     /// This method signs another certificate with the private key of this certificate.
@@ -185,7 +194,7 @@ impl Certificate {
             let child_bytes = other.safehash();
             let signature_bytes = self.sign(&child_bytes).unwrap().to_vec();
             let parent = Box::new(self.clone());
-            let signature = Signature::new(parent, signature_bytes);
+            let signature = Signature::with_parent(parent, signature_bytes);
 
             other.signature = Some(signature);
 
@@ -200,42 +209,66 @@ impl Certificate {
         if !self.is_signed() {
             Err("This certificate isn't signed, so it can't be valid.")
         } else {
+
+            // get a hash unique to this certificate
             let bytes: &[u8] = &self.safehash()[..];
 
+            // get the signature
             let signature = self.signature.as_ref().unwrap();
 
+            // if it is signed by the master key
             if signature.is_signed_by_master() {
 
+                // get the signature hash
                 let hash = signature.get_hash();
 
+                // verify it for the safehash, master public key and the signature
                 let r = ed25519::verify(bytes, hash, master_pk);
 
+                // if it is valid
                 if r {
 
+                    // check if the certificate is expired
                     if self.is_expired() {
                         Err("This certificate is expired")
                     } else {
                         Ok(())
                     }
+
                 } else {
+
+                    // else the signature isn't from the master key
                     Err("Failed to verify master signature")
                 }
 
             } else {
+
+                // if it is not signed by the master key, get the parent
                 let parent: &Certificate = signature.get_parent().unwrap();
+
+                // verify the signature of the parent
                 let sign_real = parent.verify(bytes, &signature.get_hash());
+
+                // verify that the parent is valid
                 let parent_real = parent.is_valid(&master_pk).is_ok();
 
+                // if the signature is valid
                 if sign_real {
+
+                    // and the parent certificate is valid
                     if parent_real {
+
+                        // and the certificate is not expired
                         if !self.is_expired() {
                             Ok(())
                         } else {
                             Err("The certificate is expired")
                         }
+
                     } else {
                         Err("The parent is invalid.")
                     }
+
                 } else {
                     Err("The signature of the parent isn invalid.")
                 }
@@ -252,21 +285,29 @@ impl Certificate {
     /// takes a json-encoded byte vector and tries to create a certificate from it.
     pub fn from_json(compressed: &[u8]) -> Result<Certificate, &'static str> {
 
+        // create a byte vector
         let mut bytes: Vec<u8> = Vec::new();
-        let magic: [u8; 6] = [0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00];
+
+        // load slice into vector
         bytes.extend(compressed);
+
+        // overwrite with LZMA magic bytes
+        let magic: [u8; 6] = [0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00];
         copy_bytes(&mut bytes[0..7], &magic, 0, 0, 6);
 
+        // decompress the vector
         let o = lzma::decompress(&bytes[..]);
         if o.is_err() {
             return Err("Failed to decompress certificate");
         }
 
+        // read utf8 string
         let o = String::from_utf8(o.unwrap());
         if o.is_err() {
             return Err("Failed to read UTF8 from decompressed vector");
         }
 
+        // decode json object and return Certificate
         let o = json::decode(&o.unwrap());
         if o.is_err() {
             Err("Failed to decode JSON")
@@ -276,7 +317,7 @@ impl Certificate {
     }
 
     /// Converts this certificate in a json-encoded byte vector.
-    pub fn as_json(&self) -> Vec<u8> {
+    pub fn to_json(&self) -> Vec<u8> {
         let jsoncode = json::encode(self).expect("Failed to encode certificate");
         let mut compressed = lzma::compress(&jsoncode.as_bytes(), 6).expect("failed to compress");
         let magic = "edcert".as_bytes();
@@ -309,14 +350,13 @@ impl Certificate {
         let mut certificate_file: File = File::create(folder + "/certificate.ec")
                                              .expect("Failed to create certificate file.");
 
-        let compressed = self.as_json();
+        let compressed = self.to_json();
         certificate_file.write(&*compressed)
                         .expect("Failed to write certificate file.");
     }
 
     /// This method loads a certificate from a file.
     pub fn load_from_file(filename: &str) -> Result<Certificate, &'static str> {
-
         use std::fs::File;
         use std::io::Read;
 
@@ -359,7 +399,7 @@ fn test_generate_certificate() {
     let meta = Meta::new_empty();
     let expires = UTC::now()
                       .checked_add(Duration::days(90))
-                      .expect("Fehler: Ein Tag konnte nicht auf heute addiert werden.")
+                      .expect("Failed to add a day to expiration date.")
                       .with_nanosecond(0)
                       .unwrap();
 

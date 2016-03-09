@@ -36,20 +36,20 @@ pub struct Signature {
 }
 
 impl Signature {
-    /// Creates a new Signature with the given parent and given signature.
-    pub fn new(parent: Box<Certificate>, signature: Vec<u8>) -> Signature {
-        Signature {
-            hash: signature,
-            signed_by: Some(parent),
-        }
-    }
-
     /// Creates a new Signature with the given signature. It is assumed that the signature is
     /// computed usign the master key.
-    pub fn new_without_parent(signature: Vec<u8>) -> Signature {
+    pub fn new(signature: Vec<u8>) -> Signature {
         Signature {
             hash: signature,
             signed_by: None,
+        }
+    }
+
+    /// Creates a new Signature with the given parent and given signature.
+    pub fn with_parent(parent: Box<Certificate>, signature: Vec<u8>) -> Signature {
+        Signature {
+            hash: signature,
+            signed_by: Some(parent),
         }
     }
 
