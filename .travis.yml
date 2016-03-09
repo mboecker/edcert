@@ -1,9 +1,13 @@
 language: rust
+sudo: false
 rust:
   - stable
   - beta
   - nightly
-
+addons:
+  apt:
+    packages:
+      - liblzma-dev
 matrix:
   allow_failures:
     - rust: nightly
