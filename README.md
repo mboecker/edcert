@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/zombiemuffin/edcert.svg?branch=master)](https://travis-ci.org/zombiemuffin/edcert)
+
 Hi and welcome on the git page of my crate "edcert".
 
 Edcert is a simple library for certification and authentication of data.
