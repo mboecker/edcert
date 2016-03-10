@@ -419,18 +419,16 @@ fn test_all() {
     use time::Duration;
 
     let mut meta_parent = Meta::new_empty();
-    meta_parent.set("name", "Amke Root Certificate");
-    meta_parent.set("use-for", "[amke.certificate-signing]");
+    meta_parent.set("name", "Root Certificate");
     let meta_parent = meta_parent;
 
     let mut meta_child = Meta::new_empty();
-    meta_child.set("name", "Amke Rombie Root Certificate");
-    meta_child.set("use-for", "[amke.certificate-signing, amke.rombie.*]");
+    meta_child.set("name", "Level 1 Certificate");
     let meta_child = meta_child;
 
     let expires = UTC::now()
                       .checked_add(Duration::days(90))
-                      .expect("Fehler: Ein Tag konnte nicht auf heute addiert werden.")
+                      .expect("Failed to add 90 days to today.")
                       .with_nanosecond(0)
                       .unwrap();
 
@@ -458,4 +456,38 @@ fn test_all() {
     assert!(child.is_valid(&master_pk).is_ok());
 
     child.save(&time_str);
+}
+
+#[test]
+fn test_example() {
+    use chrono::Timelike;
+    use chrono::UTC;
+    use time::Duration;
+
+    // create random master key
+    let (mpk, msk) = ed25519::generate_keypair();
+
+    // create random certificate
+    let meta = Meta::new_empty();
+    let expires = UTC::now()
+                      .checked_add(Duration::days(90))
+                      .expect("Failed to add 90 days to expiration date.")
+                      .with_nanosecond(0)
+                      .unwrap();
+    let mut cert = Certificate::generate_random(meta, expires);
+
+    // sign certificate with master key
+    cert.sign_with_master(&msk);
+
+    // the certificate is valid given the master public key
+    assert_eq!(true, cert.is_valid(&mpk).is_ok());
+
+    // now we sign data with it
+    let data = [1; 42];
+
+    // and sign the data with the certificate
+    let signature = cert.sign(&data[..]).expect("This fails, if no private key is known to the certificate.");
+
+    // the signature must be valid
+    assert_eq!(true, cert.verify(&data[..], &signature[..]));
 }
