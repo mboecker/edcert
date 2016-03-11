@@ -57,6 +57,10 @@ assert_eq!(true, cert.verify(&data[..], &signature[..]));
 
 MIT
 
+That means you can use this code in open source projects and/or commercial
+projects without any problems. Please read the license file "LICENSE" for
+details
+
 [Ed25519]: https://ed25519.cr.yp.to/
 [sodiumoxide]: http://dnaq.github.io/sodiumoxide/sodiumoxide/index.html
 [NaCl]: https://nacl.cr.yp.to/

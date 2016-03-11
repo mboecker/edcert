@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+use sodiumoxide;
 use sodiumoxide::crypto::sign::ed25519;
 
 /// This is the length of a ed25519 private key.
@@ -28,9 +29,22 @@ pub const PRIVATE_KEY_LEN: usize = 64;
 /// This is the length of a ed25519 public key.
 pub const PUBLIC_KEY_LEN: usize = 32;
 
+static mut inited: bool = false;
+
 /// This method generates a random ed25519 keypair from a cryptographically secure source
 /// (on unix this is /dev/urandom).
 pub fn generate_keypair() -> ([u8; 32], [u8; 64]) {
+
+    unsafe {
+
+        // we cann do this simple unsafe "lazy init",
+        // because it would be OK to call init() twice.
+
+        if !inited {
+            inited = true;
+            sodiumoxide::init();
+        }
+    }
 
     let (pk, sk) = ed25519::gen_keypair();
 
