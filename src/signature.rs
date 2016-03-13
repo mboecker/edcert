@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+use bytescontainer::BytesContainer;
 use certificate::Certificate;
 use rustc_serialize::Encodable;
 use rustc_serialize::Encoder;
@@ -29,7 +30,7 @@ use rustc_serialize::Decoder;
 pub struct Signature {
     /// This is the actual signature generated with the certificate data and the parents private key
     /// It can be validated with the parents public key.
-    hash: Vec<u8>,
+    hash: BytesContainer,
 
     /// If this is None, then the Certificate is signed with the master key.
     signed_by: Option<Box<Certificate>>,
@@ -40,7 +41,7 @@ impl Signature {
     /// computed usign the master key.
     pub fn new(signature: Vec<u8>) -> Signature {
         Signature {
-            hash: signature,
+            hash: BytesContainer::new(signature),
             signed_by: None,
         }
     }
@@ -48,7 +49,7 @@ impl Signature {
     /// Creates a new Signature with the given parent and given signature.
     pub fn with_parent(parent: Box<Certificate>, signature: Vec<u8>) -> Signature {
         Signature {
-            hash: signature,
+            hash: BytesContainer::new(signature),
             signed_by: Some(parent),
         }
     }
@@ -73,6 +74,6 @@ impl Signature {
 
     /// This method will return the signature given by the parent.
     pub fn get_hash(&self) -> &Vec<u8> {
-        &self.hash
+        &self.hash.get()
     }
 }

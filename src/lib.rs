@@ -26,6 +26,7 @@ extern crate rustc_serialize;
 extern crate sodiumoxide;
 extern crate lzma;
 
+mod bytescontainer;
 pub mod ed25519;
 pub mod meta;
 pub mod signature;

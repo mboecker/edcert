@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+use bytescontainer::BytesContainer;
 use meta::Meta;
 use signature::Signature;
 use rustc_serialize::json;
@@ -50,10 +51,10 @@ pub struct Certificate {
     meta: Meta,
 
     /// the public key of this certificate
-    public_key: Vec<u8>,
+    public_key: BytesContainer,
 
     /// the private key, if it is known
-    private_key: Option<Vec<u8>>,
+    private_key: Option<BytesContainer>,
 
     /// a timestamp when this certificate expires
     expires: String,
@@ -78,8 +79,8 @@ impl Certificate {
 
         // create the certificate
         Certificate {
-            private_key: Some(private_key),
-            public_key: public_key,
+            private_key: Some(BytesContainer::new(private_key)),
+            public_key: BytesContainer::new(public_key),
             expires: expires.to_rfc3339(),
             meta: meta,
             signature: None,
@@ -98,13 +99,18 @@ impl Certificate {
 
     /// This method returns a reference to the public key.
     pub fn get_public_key(&self) -> &Vec<u8> {
-        &self.public_key
+        &self.public_key.get()
     }
 
     /// This method returns the private key, if it is known, or None if the certificate has been
     /// initialized without the private key.
-    pub fn get_private_key(&self) -> &Option<Vec<u8>> {
-        &self.private_key
+    pub fn get_private_key<'a>(&'a self) -> Option<&'a Vec<u8>> {
+        if self.has_private_key() {
+            let vec = self.private_key.as_ref().unwrap().get();
+            Some(vec)
+        } else {
+            None
+        }
     }
 
     /// This method returns true, if the private key is saved in the certificate.
@@ -119,7 +125,7 @@ impl Certificate {
 
     /// This method replaces the current private key of this certificate with the given one.
     pub fn set_private_key(&mut self, private_key: Vec<u8>) {
-        self.private_key = Some(private_key);
+        self.private_key = Some(BytesContainer::new(private_key));
     }
 
     /// This method checks, if this certificates expiration date is now or in the past.
@@ -150,7 +156,11 @@ impl Certificate {
         copy_bytes(&mut bytes[64..], self.expires.as_bytes(), 0, 0, 25);
 
         // finally, the public key is appended
-        copy_bytes(&mut bytes[89..], &*self.public_key, 0, 0, PUBLIC_KEY_LEN);
+        copy_bytes(&mut bytes[89..],
+                   &self.public_key.get()[..],
+                   0,
+                   0,
+                   PUBLIC_KEY_LEN);
 
         bytes
     }
@@ -174,7 +184,7 @@ impl Certificate {
     /// This method signs the given data and returns the signature.
     pub fn sign(&self, data: &[u8]) -> Option<Vec<u8>> {
         if self.has_private_key() {
-            let signature = ed25519::sign(data, self.private_key.as_ref().unwrap());
+            let signature = ed25519::sign(data, self.get_private_key().unwrap());
             Some(signature)
         } else {
             None
@@ -278,7 +288,7 @@ impl Certificate {
 
     /// This method verifies that the given signature is valid for the given data.
     pub fn verify(&self, data: &[u8], signature: &[u8]) -> bool {
-        let result = ed25519::verify(data, signature, &self.public_key);
+        let result = ed25519::verify(data, signature, self.get_public_key());
         result
     }
 
@@ -342,7 +352,7 @@ impl Certificate {
         if self.has_private_key() {
             let mut private_keyfile: File = File::create(folder.clone() + "/private.key")
                                                 .expect("Failed to create private key file.");
-            let bytes: &[u8] = self.private_key.as_ref().unwrap();
+            let bytes: &[u8] = self.get_private_key().unwrap();
             private_keyfile.write_all(bytes).expect("Failed to write private key file.");
         }
 
@@ -486,7 +496,8 @@ fn test_example() {
     let data = [1; 42];
 
     // and sign the data with the certificate
-    let signature = cert.sign(&data[..]).expect("This fails, if no private key is known to the certificate.");
+    let signature = cert.sign(&data[..])
+                        .expect("This fails, if no private key is known to the certificate.");
 
     // the signature must be valid
     assert_eq!(true, cert.verify(&data[..], &signature[..]));
