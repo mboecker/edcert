@@ -1,6 +1,6 @@
 [root]
 name = "edcert"
-version = "2.0.2"
+version = "2.1.0"
 dependencies = [
  "chrono 0.2.20 (registry+https://github.com/rust-lang/crates.io-index)",
  "rust-lzma 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
