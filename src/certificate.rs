@@ -278,7 +278,6 @@ impl Certificate {
                     } else {
                         Err("The parent is invalid.")
                     }
-
                 } else {
                     Err("The signature of the parent isn invalid.")
                 }
@@ -290,6 +289,54 @@ impl Certificate {
     pub fn verify(&self, data: &[u8], signature: &[u8]) -> bool {
         let result = ed25519::verify(data, signature, self.get_public_key());
         result
+    }
+
+    pub fn is_revoked(&self, revokeserver : &str) -> Result<(), &'static str> {
+
+        use hyper::Client;
+        use std::io::Read;
+        use rustc_serialize::json::Json;
+
+        let bytestr = self.public_key.to_bytestr();
+
+        let body = format!("pub={}", bytestr);
+
+        let client = Client::new();
+
+        let mut req = client.get(&format!("{}?{}", revokeserver, body))
+                    .body(&body[..])
+                    .send()
+                    .expect("Failed to request");
+
+        let mut response = String::new();
+        req.read_to_string(&mut response).expect("Failed to read response");
+
+        let response = response.trim();
+
+        println!("{}", response);
+
+        let json: Result<Json, _> = Json::from_str(response);
+
+        let json: Json = match json {
+            Ok(o) => o,
+            Err(_) => return Err("Failed to read JSON")
+        };
+
+        let json = match json.find("revoked") {
+            Some(o) => o,
+            None => return Err("Invalid JSON")
+        };
+
+        if json.is_boolean() {
+            match json.as_boolean().unwrap() {
+                true => Err("The certificate has been revoked."),
+                false => Ok(())
+            }
+        }
+        else
+        {
+            Err("Invalid JSON")
+        }
     }
 
     /// takes a json-encoded byte vector and tries to create a certificate from it.
@@ -501,4 +548,21 @@ fn test_example() {
 
     // the signature must be valid
     assert_eq!(true, cert.verify(&data[..], &signature[..]));
+}
+
+#[test]
+fn test_revoke() {
+    use chrono::Timelike;
+    use chrono::UTC;
+    use time::Duration;
+
+    let meta = Meta::new_empty();
+    let expires = UTC::now()
+                      .checked_add(Duration::days(90))
+                      .expect("Failed to add 90 days to expiration date.")
+                      .with_nanosecond(0)
+                      .unwrap();
+    let cert = Certificate::generate_random(meta, expires);
+
+    assert_eq!(true, cert.is_revoked("http://localhost/api.php").is_ok());
 }
