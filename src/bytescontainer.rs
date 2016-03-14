@@ -40,9 +40,9 @@ impl BytesContainer {
         &self.bytes
     }
 
-    pub fn get_mut<'a>(&'a mut self) -> &'a mut Vec<u8> {
-        &mut self.bytes
-    }
+    // pub fn get_mut<'a>(&'a mut self) -> &'a mut Vec<u8> {
+    //     &mut self.bytes
+    // }
 
     pub fn to_bytestr(&self) -> String {
         let bytestr: Vec<String> = self.bytes.iter().map(|b| format!("{:02X}", b)).collect();

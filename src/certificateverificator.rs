@@ -22,9 +22,8 @@
 
 use bytescontainer::BytesContainer;
 use certificate::Certificate;
-use meta::Meta;
 
-struct CertificateVerificator {
+pub struct CertificateVerificator {
     revokeserver: Option<String>,
     master_public_key: BytesContainer
 }
@@ -68,10 +67,11 @@ fn test_verificator() {
     use chrono::Timelike;
     use chrono::UTC;
     use time::Duration;
+    use meta::Meta;
 
     let (mpk, msk) = ed25519::generate_keypair();
 
-    let cv = CertificateVerificator::with_revokeserver("http://localhost/api.php", &mpk);
+    let cv = CertificateVerificator::new(&mpk);
 
     let meta = Meta::new_empty();
     let expires = UTC::now()
@@ -80,9 +80,13 @@ fn test_verificator() {
                       .with_nanosecond(0)
                       .unwrap();
 
-    let mut cert = Certificate::generate_random(meta, expires);
+    let mut cert = Certificate::generate_random(meta.clone(), expires.clone());
 
     cert.sign_with_master(&msk[..]);
 
-    assert!(cv.is_valid(&cert));
+    assert_eq!(cv.is_valid(&cert), true);
+
+    let cert_invalid = Certificate::generate_random(meta.clone(), expires.clone());
+
+    assert_eq!(cv.is_valid(&cert_invalid), false);
 }
