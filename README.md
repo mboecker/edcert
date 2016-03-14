@@ -24,6 +24,9 @@ the well known cryptography libraray by Dan Bernstein et al.
 use chrono::Timelike;
 use chrono::UTC;
 use time::Duration;
+use meta::Meta;
+use certificate::Certificate;
+use certificate_verificator::CertificateVerificator;
 
 // create random master key
 let (mpk, msk) = ed25519::generate_keypair();
@@ -42,6 +45,13 @@ cert.sign_with_master(&msk);
 
 // the certificate is valid given the master public key
 assert_eq!(true, cert.is_valid(&mpk).is_ok());
+
+// but wait! if we want to validate more than one certificate with the same
+// public key, which is more than likely, we can use this
+let cv = CertificateVerificator::new(&mpk);
+
+// now we use the CV to validate certificates
+assert_eq!(true, cv.is_valid(&cert));
 
 // now we sign data with it
 let data = [1; 42];
