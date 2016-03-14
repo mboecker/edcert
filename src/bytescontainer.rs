@@ -72,3 +72,31 @@ impl Encodable for BytesContainer {
         self.to_bytestr().encode(d)
     }
 }
+
+impl Drop for BytesContainer {
+    fn drop(&mut self) {
+        for i in 0..self.bytes.len() {
+            self.bytes[i] = 0;
+        }
+    }
+}
+
+#[test]
+fn test_memclear() {
+    unsafe {
+        // this will point to the vec of bytes
+        let ptr : *const Vec<u8>;
+
+        // init a vec and let it go out of scope
+        {
+            let a = vec![1,2,3];
+            let bc = BytesContainer::new(a);
+
+            // assign pointer
+            ptr = bc.get();
+        }
+
+        // now the data should be cleared
+        assert_eq!(*ptr, vec!(0,0,0));
+    }
+}
