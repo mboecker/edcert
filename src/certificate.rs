@@ -550,19 +550,19 @@ fn test_example() {
     assert_eq!(true, cert.verify(&data[..], &signature[..]));
 }
 
-#[test]
-fn test_revoke() {
-    use chrono::Timelike;
-    use chrono::UTC;
-    use time::Duration;
-
-    let meta = Meta::new_empty();
-    let expires = UTC::now()
-                      .checked_add(Duration::days(90))
-                      .expect("Failed to add 90 days to expiration date.")
-                      .with_nanosecond(0)
-                      .unwrap();
-    let cert = Certificate::generate_random(meta, expires);
-
-    assert_eq!(true, cert.is_revoked("http://localhost/api.php").is_ok());
-}
+// #[test]
+// fn test_revoke() {
+//     use chrono::Timelike;
+//     use chrono::UTC;
+//     use time::Duration;
+//
+//     let meta = Meta::new_empty();
+//     let expires = UTC::now()
+//                       .checked_add(Duration::days(90))
+//                       .expect("Failed to add 90 days to expiration date.")
+//                       .with_nanosecond(0)
+//                       .unwrap();
+//     let cert = Certificate::generate_random(meta, expires);
+//
+//     cert.is_revoked("http://localhost/api.php").is_err();
+// }
