@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Certificate` struct in crate `edcert`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Certificate">
+
+    <title>edcert::certificate::Certificate - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>edcert</a>::<wbr><a href='index.html'>certificate</a></p><script>window.sidebarCurrent = {name: 'Certificate', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>edcert</a>::<wbr><a href='index.html'>certificate</a>::<wbr><a class='struct' href=''>Certificate</a></span><span class='out-of-band'><span id='render-detail'>
+            <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                [<span class='inner'>&#x2212;</span>]
+            </a>
+        </span><a id='src-266' class='srclink' href='../../src/edcert/certificate.rs.html#48-65' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Certificate {
+    // some fields omitted
+}</pre><h2 id='methods'>Methods</h2><h3 class='impl'><code>impl <a class='struct' href='../../edcert/certificate/struct.Certificate.html' title='edcert::certificate::Certificate'>Certificate</a></code></h3><div class='impl-items'><h4 id='method.generate_random' class='method'><code>fn <a href='#method.generate_random' class='fnname'>generate_random</a>(meta: <a class='struct' href='../../edcert/meta/struct.Meta.html' title='edcert::meta::Meta'>Meta</a>, expires: <a class='struct' href='https://lifthrasiir.github.io/rust-chrono/chrono/datetime/struct.DateTime.html' title='chrono::datetime::DateTime'>DateTime</a>&lt;<a class='struct' href='https://lifthrasiir.github.io/rust-chrono/chrono/offset/utc/struct.UTC.html' title='chrono::offset::utc::UTC'>UTC</a>&gt;) -&gt; <a class='struct' href='../../edcert/certificate/struct.Certificate.html' title='edcert::certificate::Certificate'>Certificate</a></code></h4>
+<div class='docblock'><p>This method generates a random public/private keypair and a certificate for it.</p>
+</div><h4 id='method.get_meta_mut' class='method'><code>fn <a href='#method.get_meta_mut' class='fnname'>get_meta_mut</a>(&amp;mut self) -&gt; &amp;mut <a class='struct' href='../../edcert/meta/struct.Meta.html' title='edcert::meta::Meta'>Meta</a></code></h4>
+<div class='docblock'><p>This method returns a mutable reference to the meta structure.</p>
+</div><h4 id='method.get_meta' class='method'><code>fn <a href='#method.get_meta' class='fnname'>get_meta</a>(&amp;self) -&gt; &amp;<a class='struct' href='../../edcert/meta/struct.Meta.html' title='edcert::meta::Meta'>Meta</a></code></h4>
+<div class='docblock'><p>This method returns a reference to the meta structure.</p>
+</div><h4 id='method.get_public_key' class='method'><code>fn <a href='#method.get_public_key' class='fnname'>get_public_key</a>(&amp;self) -&gt; &amp;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a>&gt;</code></h4>
+<div class='docblock'><p>This method returns a reference to the public key.</p>
+</div><h4 id='method.get_private_key' class='method'><code>fn <a href='#method.get_private_key' class='fnname'>get_private_key</a>&lt;'a&gt;(&amp;'a self) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;&amp;'a <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a>&gt;&gt;</code></h4>
+<div class='docblock'><p>This method returns the private key, if it is known, or None if the certificate has been
+initialized without the private key.</p>
+</div><h4 id='method.has_private_key' class='method'><code>fn <a href='#method.has_private_key' class='fnname'>has_private_key</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></h4>
+<div class='docblock'><p>This method returns true, if the private key is saved in the certificate.</p>
+</div><h4 id='method.get_expires' class='method'><code>fn <a href='#method.get_expires' class='fnname'>get_expires</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></h4>
+<div class='docblock'><p>This method returns the expiration date as a RFC 3339 string.</p>
+</div><h4 id='method.set_private_key' class='method'><code>fn <a href='#method.set_private_key' class='fnname'>set_private_key</a>(&amp;mut self, private_key: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a>&gt;)</code></h4>
+<div class='docblock'><p>This method replaces the current private key of this certificate with the given one.</p>
+</div><h4 id='method.is_expired' class='method'><code>fn <a href='#method.is_expired' class='fnname'>is_expired</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></h4>
+<div class='docblock'><p>This method checks, if this certificates expiration date is now or in the past.</p>
+</div><h4 id='method.safehash' class='method'><code>fn <a href='#method.safehash' class='fnname'>safehash</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.array.html'>[<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a>; CERTIFICATE_BYTE_LEN]</a></code></h4>
+<div class='docblock'><p>This method returns a &quot;hash&quot;. This is used to validate the certificate.
+All relevant information of the certificate is used to produce the hash,
+including the public key, meta data and the expiration date.</p>
+</div><h4 id='method.get_parent' class='method'><code>fn <a href='#method.get_parent' class='fnname'>get_parent</a>(&amp;self) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;&amp;<a class='struct' href='../../edcert/certificate/struct.Certificate.html' title='edcert::certificate::Certificate'>Certificate</a>&gt;</code></h4>
+<div class='docblock'><p>This method returns the parent certificate of this certificate, if it exists.</p>
+</div><h4 id='method.is_signed' class='method'><code>fn <a href='#method.is_signed' class='fnname'>is_signed</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></h4>
+<div class='docblock'><p>This method returns true, if a signature exists (is not None). This doesn&#39;t validate the
+signature.</p>
+</div><h4 id='method.sign' class='method'><code>fn <a href='#method.sign' class='fnname'>sign</a>(&amp;self, data: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a>&gt;&gt;</code></h4>
+<div class='docblock'><p>This method signs the given data and returns the signature.</p>
+</div><h4 id='method.sign_with_master' class='method'><code>fn <a href='#method.sign_with_master' class='fnname'>sign_with_master</a>(&amp;mut self, master_private_key: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>)</code></h4>
+<div class='docblock'><p>This method signs this certificate with the given private master key.</p>
+</div><h4 id='method.sign_certificate' class='method'><code>fn <a href='#method.sign_certificate' class='fnname'>sign_certificate</a>(&amp;self, other: &amp;mut <a class='struct' href='../../edcert/certificate/struct.Certificate.html' title='edcert::certificate::Certificate'>Certificate</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>, &amp;'static <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>&gt;</code></h4>
+<div class='docblock'><p>This method signs another certificate with the private key of this certificate.</p>
+</div><h4 id='method.is_valid' class='method'><code>fn <a href='#method.is_valid' class='fnname'>is_valid</a>(&amp;self, master_pk: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>, &amp;'static <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>&gt;</code></h4>
+<div class='docblock'><p>This method verifies that this certificate is valid by analyzing the trust chain.</p>
+</div><h4 id='method.verify' class='method'><code>fn <a href='#method.verify' class='fnname'>verify</a>(&amp;self, data: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>, signature: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></h4>
+<div class='docblock'><p>This method verifies that the given signature is valid for the given data.</p>
+</div><h4 id='method.is_revoked' class='method'><code>fn <a href='#method.is_revoked' class='fnname'>is_revoked</a>(&amp;self, revokeserver: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>, &amp;'static <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>&gt;</code></h4>
+<h4 id='method.from_json' class='method'><code>fn <a href='#method.from_json' class='fnname'>from_json</a>(compressed: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../../edcert/certificate/struct.Certificate.html' title='edcert::certificate::Certificate'>Certificate</a>, &amp;'static <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>&gt;</code></h4>
+<div class='docblock'><p>takes a json-encoded byte vector and tries to create a certificate from it.</p>
+</div><h4 id='method.to_json' class='method'><code>fn <a href='#method.to_json' class='fnname'>to_json</a>(&amp;self) -&gt; <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a>&gt;</code></h4>
+<div class='docblock'><p>Converts this certificate in a json-encoded byte vector.</p>
+</div><h4 id='method.save' class='method'><code>fn <a href='#method.save' class='fnname'>save</a>(&amp;self, folder: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>)</code></h4>
+<div class='docblock'><p>Saves this certificate into a folder: one file for the certificate and one file for the
+private key.</p>
+</div><h4 id='method.load_from_file' class='method'><code>fn <a href='#method.load_from_file' class='fnname'>load_from_file</a>(filename: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../../edcert/certificate/struct.Certificate.html' title='edcert::certificate::Certificate'>Certificate</a>, &amp;'static <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>&gt;</code></h4>
+<div class='docblock'><p>This method loads a certificate from a file.</p>
+</div><h4 id='method.load_private_key' class='method'><code>fn <a href='#method.load_private_key' class='fnname'>load_private_key</a>(&amp;mut self, filename: &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>, &amp;'static <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>&gt;</code></h4>
+<div class='docblock'><p>This method reads a private key from a file and sets it in this certificate.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 id='derived_implementations'>Derived Implementations </h3><h3 class='impl'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../../edcert/certificate/struct.Certificate.html' title='edcert::certificate::Certificate'>Certificate</a></code></h3><div class='impl-items'><h4 id='method.fmt' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#method.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></h4>
+</div><h3 class='impl'><code>impl <a class='trait' href='https://doc.rust-lang.org/rustc-serialize/rustc_serialize/serialize/trait.Encodable.html' title='rustc_serialize::serialize::Encodable'>Encodable</a> for <a class='struct' href='../../edcert/certificate/struct.Certificate.html' title='edcert::certificate::Certificate'>Certificate</a></code></h3><div class='impl-items'><h4 id='method.encode' class='method'><code>fn <a href='https://doc.rust-lang.org/rustc-serialize/rustc_serialize/serialize/trait.Encodable.html#method.encode' class='fnname'>encode</a>&lt;__S: <a class='trait' href='https://doc.rust-lang.org/rustc-serialize/rustc_serialize/serialize/trait.Encoder.html' title='rustc_serialize::serialize::Encoder'>Encoder</a>&gt;(&amp;self, __arg_0: &amp;mut __S) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>, __S::Error&gt;</code></h4>
+</div><h3 class='impl'><code>impl <a class='trait' href='https://doc.rust-lang.org/rustc-serialize/rustc_serialize/serialize/trait.Decodable.html' title='rustc_serialize::serialize::Decodable'>Decodable</a> for <a class='struct' href='../../edcert/certificate/struct.Certificate.html' title='edcert::certificate::Certificate'>Certificate</a></code></h3><div class='impl-items'><h4 id='method.decode' class='method'><code>fn <a href='https://doc.rust-lang.org/rustc-serialize/rustc_serialize/serialize/trait.Decodable.html#method.decode' class='fnname'>decode</a>&lt;__D: <a class='trait' href='https://doc.rust-lang.org/rustc-serialize/rustc_serialize/serialize/trait.Decoder.html' title='rustc_serialize::serialize::Decoder'>Decoder</a>&gt;(__arg_0: &amp;mut __D) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../../edcert/certificate/struct.Certificate.html' title='edcert::certificate::Certificate'>Certificate</a>, __D::Error&gt;</code></h4>
+</div><h3 class='impl'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> for <a class='struct' href='../../edcert/certificate/struct.Certificate.html' title='edcert::certificate::Certificate'>Certificate</a></code></h3><div class='impl-items'><h4 id='method.clone' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class='struct' href='../../edcert/certificate/struct.Certificate.html' title='edcert::certificate::Certificate'>Certificate</a></code></h4>
+<h4 id='method.clone_from' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from' class='fnname'>clone_from</a>(&amp;mut self, source: &amp;Self)</code></h4>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "edcert";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>
