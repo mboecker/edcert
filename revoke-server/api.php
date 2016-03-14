@@ -62,10 +62,25 @@ function is_revoked()
     {
         $link = mysql_connect($dbhost, $dbuser, $dbpw, $dbname);
 
+        if (!$link)
+        {
+            // the connection may fail
+            ?>{"err":"db conn failed"}<?php
+            exit();
+        }
+
+
         mysql_select_db($dbtable);
 
         // request the status of the certificate
         $req = mysql_query("SELECT `revoke_id` FROM `$dbname`.`$dbtable` WHERE `public_key` = '$public_key' LIMIT 1");
+
+        if (!req)
+        {
+            // the connection may fail
+            ?>{"err":"query failed"}<?php
+            exit();
+        }
 
         // has the certificate been revoked?
         $revoked = mysql_num_rows($req) > 0;
