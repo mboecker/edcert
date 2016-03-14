@@ -1,11 +1,12 @@
 [package]
 
 name = "edcert"
-version = "3.0.0"
+version = "3.0.1"
 authors = [ "Marvin Böcker <marvin.boecker@udo.edu>" ]
 
 description = "a crate which can be used to sign and verify content based on ed25519."
-repository = "https://github.com/zombiemuffin/edcert"
+repository = "https://github.com/zombiemuffin/edcert/"
+documentation = "https://zombiemuffin.github.io/edcert/edcert/"
 readme = "README.md"
 keywords = ["ed25519", "crypto", "cryptography", "security", "edcert"]
 license = "MIT"
