@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["CERTIFICATE_BYTE_LEN","This is the length of a safehash of a certificate."],["SIGNATURE_LEN","This is the length of a ed25519 signature."]],"struct":[["Certificate",""]]});

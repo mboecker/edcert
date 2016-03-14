@@ -4,13 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="rustdoc">
-    <meta name="description" content="API documentation for the Rust `edcert` crate.">
-    <meta name="keywords" content="rust, rustlang, rust-lang, edcert">
+    <meta name="description" content="API documentation for the Rust `ed25519` mod in crate `edcert`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, ed25519">
 
-    <title>edcert - Rust</title>
+    <title>edcert::ed25519 - Rust</title>
 
-    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
-    <link rel="stylesheet" type="text/css" href="../main.css">
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
 
     
     
@@ -27,7 +27,7 @@
 
     <nav class="sidebar">
         
-        <p class='location'></p><script>window.sidebarCurrent = {name: 'edcert', ty: 'mod', relpath: '../'};</script>
+        <p class='location'><a href='../index.html'>edcert</a></p><script>window.sidebarCurrent = {name: 'ed25519', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
     </nav>
 
     <nav class="sub">
@@ -42,50 +42,59 @@
     </nav>
 
     <section id='main' class="content mod">
-<h1 class='fqn'><span class='in-band'>Crate <a class='mod' href=''>edcert</a></span><span class='out-of-band'><span id='render-detail'>
+<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>edcert</a>::<wbr><a class='mod' href=''>ed25519</a></span><span class='out-of-band'><span id='render-detail'>
             <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                 [<span class='inner'>&#x2212;</span>]
             </a>
-        </span><a id='src-0' class='srclink' href='../src/edcert/lib.rs.html#23-79' title='goto source code'>[src]</a></span></h1>
-<h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+        </span><a id='src-65' class='srclink' href='../../src/edcert/ed25519.rs.html#23-130' title='goto source code'>[src]</a></span></h1>
+<h2 id='constants' class='section-header'><a href="#constants">Constants</a></h2>
 <table>
                     <tr class=' module-item'>
-                        <td><a class='mod' href='certificate/index.html'
-                               title='edcert::certificate'>certificate</a></td>
+                        <td><a class='constant' href='constant.PRIVATE_KEY_LEN.html'
+                               title='edcert::ed25519::PRIVATE_KEY_LEN'>PRIVATE_KEY_LEN</a></td>
                         <td class='docblock short'>
-                             
+                             <p>This is the length of a ed25519 private key.</p>
+
                         </td>
                     </tr>
                 
                     <tr class=' module-item'>
-                        <td><a class='mod' href='certificate_verificator/index.html'
-                               title='edcert::certificate_verificator'>certificate_verificator</a></td>
+                        <td><a class='constant' href='constant.PUBLIC_KEY_LEN.html'
+                               title='edcert::ed25519::PUBLIC_KEY_LEN'>PUBLIC_KEY_LEN</a></td>
                         <td class='docblock short'>
-                             
+                             <p>This is the length of a ed25519 public key.</p>
+
+                        </td>
+                    </tr>
+                </table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table>
+                    <tr class=' module-item'>
+                        <td><a class='fn' href='fn.generate_keypair.html'
+                               title='edcert::ed25519::generate_keypair'>generate_keypair</a></td>
+                        <td class='docblock short'>
+                             <p>This method generates a random ed25519 keypair from a cryptographically secure source
+(on unix this is /dev/urandom).</p>
+
                         </td>
                     </tr>
                 
                     <tr class=' module-item'>
-                        <td><a class='mod' href='ed25519/index.html'
-                               title='edcert::ed25519'>ed25519</a></td>
+                        <td><a class='fn' href='fn.sign.html'
+                               title='edcert::ed25519::sign'>sign</a></td>
                         <td class='docblock short'>
-                             
+                             <p>This method takes a data vector and a private key and computes the signature which can be
+verified using the public key.</p>
+
                         </td>
                     </tr>
                 
                     <tr class=' module-item'>
-                        <td><a class='mod' href='meta/index.html'
-                               title='edcert::meta'>meta</a></td>
+                        <td><a class='fn' href='fn.verify.html'
+                               title='edcert::ed25519::verify'>verify</a></td>
                         <td class='docblock short'>
-                             
-                        </td>
-                    </tr>
-                
-                    <tr class=' module-item'>
-                        <td><a class='mod' href='signature/index.html'
-                               title='edcert::signature'>signature</a></td>
-                        <td class='docblock short'>
-                             
+                             <p>This method takes a data vector, a signature and a public key and returns true, if the
+signature has been created using the correct private key.</p>
+
                         </td>
                     </tr>
                 </table></section>
@@ -140,13 +149,13 @@
     
 
     <script>
-        window.rootPath = "../";
+        window.rootPath = "../../";
         window.currentCrate = "edcert";
         window.playgroundUrl = "";
     </script>
-    <script src="../jquery.js"></script>
-    <script src="../main.js"></script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
     
-    <script defer src="../search-index.js"></script>
+    <script defer src="../../search-index.js"></script>
 </body>
 </html>
