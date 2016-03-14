@@ -28,19 +28,15 @@ $dbuser = "root";
 $dbpw = "";
 $dbname = "edcert";
 $dbtable = "revoked_certs";
+$dbusemysqli = false;
 
 // *** END CONFIGURE THIS ***
 
-// this script expects a public key as a GET parameter.
-if(!empty($_GET["pub"]))
+function is_revoked()
 {
+    global $dbhost, $dbuser, $dbpw, $dbname, $dbtable, $dbusemysqli;
 
-    // we filter everything except for hexadecimal characters
-    $public_key = preg_replace("/[^a-fA-F0-9]+/", "", $_GET["pub"]);
-
-    // a public key in this representation has the length 32 * 2
-    // (32 bytes with each 2 characters)
-    if(strlen($public_key) == 32 * 2)
+    if ($dbusemysqli)
     {
         // open a database connection
         $mysqli = new mysqli($dbhost, $dbuser, $dbpw, $dbname);
@@ -59,6 +55,40 @@ if(!empty($_GET["pub"]))
 
         // close the connection
         $mysqli->close();
+
+        return $revoked;
+    }
+    else
+    {
+        $link = mysql_connect($dbhost, $dbuser, $dbpw, $dbname);
+
+        mysql_select_db($dbtable);
+
+        // request the status of the certificate
+        $req = mysql_query("SELECT `revoke_id` FROM `$dbname`.`$dbtable` WHERE `public_key` = '$public_key' LIMIT 1");
+
+        // has the certificate been revoked?
+        $revoked = mysql_num_rows($req) > 0;
+
+        // close the connection
+        mysql_close($link);
+
+        return $revoked;
+    }
+}
+
+// this script expects a public key as a GET parameter.
+if(!empty($_GET["pub"]))
+{
+
+    // we filter everything except for hexadecimal characters
+    $public_key = preg_replace("/[^a-fA-F0-9]+/", "", $_GET["pub"]);
+
+    // a public key in this representation has the length 32 * 2
+    // (32 bytes with each 2 characters)
+    if(strlen($public_key) == 32 * 2)
+    {
+        $revoked = is_revoked($public_key);
 
         // if it has been revoked
         if ($revoked)
