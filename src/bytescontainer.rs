@@ -85,11 +85,11 @@ impl Drop for BytesContainer {
 fn test_memclear() {
     unsafe {
         // this will point to the vec of bytes
-        let ptr : *const Vec<u8>;
+        let ptr: *const Vec<u8>;
 
         // init a vec and let it go out of scope
         {
-            let a = vec![1,2,3];
+            let a = vec![1, 2, 3];
             let bc = BytesContainer::new(a);
 
             // assign pointer
@@ -97,6 +97,6 @@ fn test_memclear() {
         }
 
         // now the data should be cleared
-        assert_eq!(*ptr, vec!(0,0,0));
+        assert_eq!(*ptr, vec![0, 0, 0]);
     }
 }

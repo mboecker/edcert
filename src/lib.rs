@@ -32,3 +32,4 @@ pub mod ed25519;
 pub mod meta;
 pub mod signature;
 pub mod certificate;
+pub mod certificateverificator;

@@ -61,7 +61,7 @@ pub struct Certificate {
 
     /// a signature for trust-chaining certificates
     /// if the certificate is not signed yet, this is None
-    signature: Option<Signature>
+    signature: Option<Signature>,
 }
 
 impl Certificate {
@@ -291,7 +291,7 @@ impl Certificate {
         result
     }
 
-    pub fn is_revoked(&self, revokeserver : &str) -> Result<(), &'static str> {
+    pub fn is_revoked(&self, revokeserver: &str) -> Result<(), &'static str> {
 
         use hyper::Client;
         use std::io::Read;
@@ -304,9 +304,9 @@ impl Certificate {
         let client = Client::new();
 
         let mut req = client.get(&format!("{}?{}", revokeserver, body))
-                    .body(&body[..])
-                    .send()
-                    .expect("Failed to request");
+                            .body(&body[..])
+                            .send()
+                            .expect("Failed to request");
 
         let mut response = String::new();
         req.read_to_string(&mut response).expect("Failed to read response");
@@ -319,22 +319,20 @@ impl Certificate {
 
         let json: Json = match json {
             Ok(o) => o,
-            Err(_) => return Err("Failed to read JSON")
+            Err(_) => return Err("Failed to read JSON"),
         };
 
         let json = match json.find("revoked") {
             Some(o) => o,
-            None => return Err("Invalid JSON")
+            None => return Err("Invalid JSON"),
         };
 
         if json.is_boolean() {
             match json.as_boolean().unwrap() {
                 true => Err("The certificate has been revoked."),
-                false => Ok(())
+                false => Ok(()),
             }
-        }
-        else
-        {
+        } else {
             Err("Invalid JSON")
         }
     }
