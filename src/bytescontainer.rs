@@ -50,8 +50,6 @@ impl BytesContainer {
     }
 
     pub fn from_bytestr(bytestr: &str) -> Result<BytesContainer, ()> {
-        println!("lese 2");
-
         match bytestr.from_hex() {
             Ok(vec) => Ok(BytesContainer::new(vec)),
             _ => Err(()),
