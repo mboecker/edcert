@@ -61,7 +61,7 @@ pub struct Certificate {
 
     /// a signature for trust-chaining certificates
     /// if the certificate is not signed yet, this is None
-    signature: Option<Signature>,
+    signature: Option<Signature>
 }
 
 impl Certificate {
