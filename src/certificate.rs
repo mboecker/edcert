@@ -46,17 +46,17 @@ pub const CERTIFICATE_BYTE_LEN: usize =
 
 #[derive(Clone,RustcDecodable,RustcEncodable,Debug)]
 pub struct Certificate {
-    /// The meta element contains data associated with the certificate
-    /// Common data is "use-for" which contains a list of permissions
+    /// The meta element contains data associated with the certificate.
+    /// Common data is "use-for" which contains a list of permissions.
     meta: Meta,
 
-    /// the public key of this certificate
+    /// the public key of this certificate.
     public_key: BytesContainer,
 
-    /// the private key, if it is known
+    /// the private key, if it is known.
     private_key: Option<BytesContainer>,
 
-    /// a timestamp when this certificate expires
+    /// a timestamp when this certificate expires.
     expires: String,
 
     /// a signature for trust-chaining certificates

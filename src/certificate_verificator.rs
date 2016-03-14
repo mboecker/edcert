@@ -29,6 +29,7 @@ pub struct CertificateVerificator {
 }
 
 impl CertificateVerificator {
+    /// Call this to create a CV without a revoke server.
     pub fn new(master_public_key: &[u8; 32]) -> CertificateVerificator {
 
         let mut vec: Vec<u8> = Vec::new();
@@ -40,6 +41,8 @@ impl CertificateVerificator {
         }
     }
 
+    /// Call this to create a CV with a revoke server.
+    /// For every certificate the revoke server is asked if it is known.
     pub fn with_revokeserver(revokeserver: &str, master_public_key: &[u8; 32]) -> CertificateVerificator {
 
         let mut vec: Vec<u8> = Vec::new();
@@ -51,13 +54,20 @@ impl CertificateVerificator {
         }
     }
 
-    pub fn is_valid(&self, cert: &Certificate) -> bool {
-        let mut r = true;
-        r = r && cert.is_valid(&self.master_public_key.get()[..]).is_ok();
+    /// Checks the certificate if it is valid.
+    /// If the CV knows a revoke server, that is queried as well.
+    pub fn is_valid(&self, cert: &Certificate) -> Result<(), &'static str> {
+        // this returns an Error if it fails
+        try!(cert.is_valid(&self.master_public_key.get()[..]));
+
+        // if we have a revoke server, ask it.
         if self.revokeserver.is_some() {
-            r = r && cert.is_revoked(self.revokeserver.as_ref().unwrap()).is_ok();
+            // this returns an Error if it fails
+            try!(cert.is_revoked(self.revokeserver.as_ref().unwrap()));
         }
-        r
+
+        // if nothing fails, the certificate is valid!
+        Ok(())
     }
 }
 
@@ -72,6 +82,7 @@ fn test_verificator() {
     let (mpk, msk) = ed25519::generate_keypair();
 
     let cv = CertificateVerificator::new(&mpk);
+    //let cv = CertificateVerificator::with_revokeserver("http://localhost/api.php", &mpk);
 
     let meta = Meta::new_empty();
     let expires = UTC::now()
@@ -84,9 +95,9 @@ fn test_verificator() {
 
     cert.sign_with_master(&msk[..]);
 
-    assert_eq!(cv.is_valid(&cert), true);
+    assert_eq!(cv.is_valid(&cert).is_ok(), true);
 
     let cert_invalid = Certificate::generate_random(meta.clone(), expires.clone());
 
-    assert_eq!(cv.is_valid(&cert_invalid), false);
+    assert_eq!(cv.is_valid(&cert_invalid).is_ok(), false);
 }
