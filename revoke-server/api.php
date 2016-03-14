@@ -32,7 +32,7 @@ $dbusemysqli = false;
 
 // *** END CONFIGURE THIS ***
 
-function is_revoked()
+function is_revoked($public_key)
 {
     global $dbhost, $dbuser, $dbpw, $dbname, $dbtable, $dbusemysqli;
 
@@ -75,7 +75,7 @@ function is_revoked()
         // request the status of the certificate
         $req = mysql_query("SELECT `revoke_id` FROM `$dbname`.`$dbtable` WHERE `public_key` = '$public_key' LIMIT 1");
 
-        if (!req)
+        if (!$req)
         {
             // the connection may fail
             ?>{"err":"query failed"}<?php
