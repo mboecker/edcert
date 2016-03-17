@@ -48,10 +48,10 @@ pub const CERTIFICATE_BYTE_LEN: usize =
 pub struct Certificate {
     /// The meta element contains data associated with the certificate.
     /// Common data is "use-for" which contains a list of permissions.
-    meta: Meta,
+    pub meta: Meta,
 
     /// the public key of this certificate.
-    public_key: BytesContainer,
+    pub public_key: BytesContainer,
 
     /// the private key, if it is known.
     private_key: Option<BytesContainer>,
@@ -291,52 +291,6 @@ impl Certificate {
         result
     }
 
-    pub fn is_revoked(&self, revokeserver: &str) -> Result<(), &'static str> {
-
-        use hyper::Client;
-        use std::io::Read;
-        use rustc_serialize::json::Json;
-
-        let bytestr = self.public_key.to_bytestr();
-
-        let body = format!("pub={}", bytestr);
-
-        let client = Client::new();
-
-        let mut req = client.get(&format!("{}?{}", revokeserver, body))
-                            .body(&body[..])
-                            .send()
-                            .expect("Failed to request");
-
-        let mut response = String::new();
-        req.read_to_string(&mut response).expect("Failed to read response");
-
-        let response = response.trim();
-
-        println!("{}", response);
-
-        let json: Result<Json, _> = Json::from_str(response);
-
-        let json: Json = match json {
-            Ok(o) => o,
-            Err(_) => return Err("Failed to read JSON"),
-        };
-
-        let json = match json.find("revoked") {
-            Some(o) => o,
-            None => return Err("Invalid JSON"),
-        };
-
-        if json.is_boolean() {
-            match json.as_boolean().unwrap() {
-                true => Err("The certificate has been revoked."),
-                false => Ok(()),
-            }
-        } else {
-            Err("Invalid JSON")
-        }
-    }
-
     /// takes a json-encoded byte vector and tries to create a certificate from it.
     pub fn from_json(compressed: &[u8]) -> Result<Certificate, &'static str> {
 
@@ -379,63 +333,6 @@ impl Certificate {
         copy_bytes(&mut compressed[0..6], magic, 0, 0, 6);
         compressed
     }
-
-    /// Saves this certificate into a folder: one file for the certificate and one file for the
-    /// private key.
-    pub fn save(&self, folder: &str) {
-        use std::fs::File;
-        use std::fs::DirBuilder;
-        use std::fs::metadata;
-        use std::io::Write;
-
-        let folder: String = folder.to_string();
-
-        if metadata(&folder).is_err() {
-            DirBuilder::new().create(&folder).expect("Failed to create folder");
-        }
-
-        if self.has_private_key() {
-            let mut private_keyfile: File = File::create(folder.clone() + "/private.key")
-                                                .expect("Failed to create private key file.");
-            let bytes: &[u8] = self.get_private_key().unwrap();
-            private_keyfile.write_all(bytes).expect("Failed to write private key file.");
-        }
-
-        let folder: String = folder.to_string();
-        let mut certificate_file: File = File::create(folder + "/certificate.ec")
-                                             .expect("Failed to create certificate file.");
-
-        let compressed = self.to_json();
-        certificate_file.write(&*compressed)
-                        .expect("Failed to write certificate file.");
-    }
-
-    /// This method loads a certificate from a file.
-    pub fn load_from_file(filename: &str) -> Result<Certificate, &'static str> {
-        use std::fs::File;
-        use std::io::Read;
-
-        let filename: String = filename.to_string();
-        let mut certificate_file: File = File::open(filename)
-                                             .expect("Failed to open certificate file.");
-        let mut compressed = Vec::new();
-        certificate_file.read_to_end(&mut compressed).expect("Failed to read certificate");
-        Certificate::from_json(&*compressed)
-    }
-
-    /// This method reads a private key from a file and sets it in this certificate.
-    pub fn load_private_key(&mut self, filename: &str) -> Result<(), &'static str> {
-        use std::fs::File;
-        use std::io::Read;
-
-        let filename: String = filename.to_string();
-        let mut private_key_file: File = File::open(filename)
-                                             .expect("Failed to open private kye file.");
-        let mut private_key = Vec::new();
-        private_key_file.read_to_end(&mut private_key).expect("Failed to read private key");
-        self.set_private_key(private_key);
-        Ok(())
-    }
 }
 
 /// This is a simple copy function. This should be replaced by memcpy or something...
@@ -465,87 +362,6 @@ fn test_generate_certificate() {
     let b = Certificate::generate_random(meta, expires);
 
     assert!(a.get_public_key() != b.get_public_key());
-}
-
-#[test]
-fn test_all() {
-    use chrono::UTC;
-    use chrono::Timelike;
-    use time::Duration;
-
-    let mut meta_parent = Meta::new_empty();
-    meta_parent.set("name", "Root Certificate");
-    let meta_parent = meta_parent;
-
-    let mut meta_child = Meta::new_empty();
-    meta_child.set("name", "Level 1 Certificate");
-    let meta_child = meta_child;
-
-    let expires = UTC::now()
-                      .checked_add(Duration::days(90))
-                      .expect("Failed to add 90 days to today.")
-                      .with_nanosecond(0)
-                      .unwrap();
-
-    let (master_pk, master_sk) = ed25519::generate_keypair();
-
-    let mut child = Certificate::generate_random(meta_child, expires);
-    let mut parent = Certificate::generate_random(meta_parent, expires);
-
-    parent.sign_with_master(&master_sk);
-
-    parent.sign_certificate(&mut child).expect("Failed to sign child!");
-
-    let time_str: String = UTC::now().with_nanosecond(0).unwrap().to_rfc3339();
-
-    let certfilename = time_str.clone() + "/certificate.ec";
-    let prvkeyfilename = time_str.clone() + "/private.key";
-
-    assert!(child.is_valid(&master_pk).is_ok());
-
-    child.save(&time_str);
-
-    child = Certificate::load_from_file(&certfilename).expect("Failed to load certificate");
-    child.load_private_key(&prvkeyfilename).expect("Failed to load private key");
-
-    assert!(child.is_valid(&master_pk).is_ok());
-
-    child.save(&time_str);
-}
-
-#[test]
-fn test_example() {
-    use chrono::Timelike;
-    use chrono::UTC;
-    use time::Duration;
-
-    // create random master key
-    let (mpk, msk) = ed25519::generate_keypair();
-
-    // create random certificate
-    let meta = Meta::new_empty();
-    let expires = UTC::now()
-                      .checked_add(Duration::days(90))
-                      .expect("Failed to add 90 days to expiration date.")
-                      .with_nanosecond(0)
-                      .unwrap();
-    let mut cert = Certificate::generate_random(meta, expires);
-
-    // sign certificate with master key
-    cert.sign_with_master(&msk);
-
-    // the certificate is valid given the master public key
-    assert_eq!(true, cert.is_valid(&mpk).is_ok());
-
-    // now we sign data with it
-    let data = [1; 42];
-
-    // and sign the data with the certificate
-    let signature = cert.sign(&data[..])
-                        .expect("This fails, if no private key is known to the certificate.");
-
-    // the signature must be valid
-    assert_eq!(true, cert.verify(&data[..], &signature[..]));
 }
 
 // #[test]

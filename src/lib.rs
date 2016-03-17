@@ -33,6 +33,7 @@ pub mod meta;
 pub mod signature;
 pub mod certificate;
 pub mod certificate_verificator;
+pub mod certificate_loader;
 
 #[test]
 fn test_readme_example() {
@@ -42,6 +43,7 @@ fn test_readme_example() {
     use meta::Meta;
     use certificate::Certificate;
     use certificate_verificator::CertificateVerificator;
+    use certificate_verificator::NoRevoker;
 
     // create random master key
     let (mpk, msk) = ed25519::generate_keypair();
@@ -63,7 +65,7 @@ fn test_readme_example() {
 
     // but wait! if we want to validate more than one certificate with the same
     // public key, which is more than likely, we can use this
-    let cv = CertificateVerificator::new(&mpk);
+    let cv = CertificateVerificator::new(&mpk, NoRevoker);
 
     // now we use the CV to validate certificates
     assert_eq!(true, cv.is_valid(&cert).is_ok());

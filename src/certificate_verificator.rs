@@ -23,33 +23,25 @@
 use bytescontainer::BytesContainer;
 use certificate::Certificate;
 
-pub struct CertificateVerificator {
-    revokeserver: Option<String>,
+pub trait Revoker<T> {
+    fn is_revoked(&self, &T) -> Result<(), &'static str>;
+}
+
+pub struct CertificateVerificator<T: Revoker<Certificate>> {
+    revoker: T,
     master_public_key: BytesContainer
 }
 
-impl CertificateVerificator {
-    /// Call this to create a CV without a revoke server.
-    pub fn new(master_public_key: &[u8; 32]) -> CertificateVerificator {
-
-        let mut vec: Vec<u8> = Vec::new();
-        vec.extend_from_slice(master_public_key);
-
-        CertificateVerificator {
-            revokeserver: None,
-            master_public_key: BytesContainer::new(vec)
-        }
-    }
-
+impl<T: Revoker<Certificate>> CertificateVerificator<T> {
     /// Call this to create a CV with a revoke server.
     /// For every certificate the revoke server is asked if it is known.
-    pub fn with_revokeserver(revokeserver: &str, master_public_key: &[u8; 32]) -> CertificateVerificator {
+    pub fn new(master_public_key: &[u8; 32], revoker: T) -> CertificateVerificator<T> {
 
         let mut vec: Vec<u8> = Vec::new();
         vec.extend_from_slice(master_public_key);
 
         CertificateVerificator {
-            revokeserver: Some(revokeserver.to_string()),
+            revoker: revoker,
             master_public_key: BytesContainer::new(vec)
         }
     }
@@ -60,13 +52,81 @@ impl CertificateVerificator {
         // this returns an Error if it fails
         try!(cert.is_valid(&self.master_public_key.get()[..]));
 
-        // if we have a revoke server, ask it.
-        if self.revokeserver.is_some() {
-            // this returns an Error if it fails
-            try!(cert.is_revoked(self.revokeserver.as_ref().unwrap()));
-        }
+        // this returns an Error if it fails
+        try!(self.revoker.is_revoked(cert));
 
         // if nothing fails, the certificate is valid!
+        Ok(())
+    }
+
+    pub fn is_revoked(&self, cert: &Certificate) -> Result<(), &'static str> {
+        self.revoker.is_revoked(cert)
+    }
+}
+
+struct HTTPRevoker {
+    revokeserver: String
+}
+
+impl HTTPRevoker {
+    pub fn new(revokeserver: &str) -> HTTPRevoker {
+        HTTPRevoker {
+            revokeserver: revokeserver.to_owned()
+        }
+    }
+}
+
+impl Revoker<Certificate> for HTTPRevoker {
+    fn is_revoked(&self, cert: &Certificate) -> Result<(), &'static str> {
+        use hyper::Client;
+        use std::io::Read;
+        use rustc_serialize::json::Json;
+
+        let bytestr = cert.public_key.to_bytestr();
+
+        let body = format!("pub={}", bytestr);
+
+        let client = Client::new();
+
+        let mut req = client.get(&format!("{}?{}", self.revokeserver, body))
+                            .body(&body[..])
+                            .send()
+                            .expect("Failed to request");
+
+        let mut response = String::new();
+        req.read_to_string(&mut response).expect("Failed to read response");
+
+        let response = response.trim();
+
+        println!("{}", response);
+
+        let json: Result<Json, _> = Json::from_str(response);
+
+        let json: Json = match json {
+            Ok(o) => o,
+            Err(_) => return Err("Failed to read JSON"),
+        };
+
+        let json = match json.find("revoked") {
+            Some(o) => o,
+            None => return Err("Invalid JSON"),
+        };
+
+        if json.is_boolean() {
+            match json.as_boolean().unwrap() {
+                true => Err("The certificate has been revoked."),
+                false => Ok(()),
+            }
+        } else {
+            Err("Invalid JSON")
+        }
+    }
+}
+
+pub struct NoRevoker;
+
+impl Revoker<Certificate> for NoRevoker {
+    fn is_revoked(&self, _: &Certificate) -> Result<(), &'static str> {
         Ok(())
     }
 }
@@ -81,8 +141,8 @@ fn test_verificator() {
 
     let (mpk, msk) = ed25519::generate_keypair();
 
-    let cv = CertificateVerificator::new(&mpk);
-    //let cv = CertificateVerificator::with_revokeserver("http://localhost/api.php", &mpk);
+    //let cv = CertificateVerificator::new(&mpk, NoRevoker);
+    let cv = CertificateVerificator::new(&mpk, HTTPRevoker::new("https://rombie.de/is_revoked.php"));
 
     let meta = Meta::new_empty();
     let expires = UTC::now()
