@@ -105,17 +105,7 @@ if(!empty($_GET["pub"]))
     {
         $revoked = is_revoked($public_key);
 
-        // if it has been revoked
-        if ($revoked)
-        {
-            // print it.
-            ?>{"pub":"<?php echo $public_key; ?>","revoked":true}<?php
-        }
-        else
-        {
-            // otherwise, print false
-            ?>{"pub":"<?php echo $public_key; ?>","revoked":false}<?php
-        }
+        ?>{"pub":"<?php echo $public_key; ?>","revoked":<?php echo $revoked ? "true" : "false"; ?>}<?php
     }
     else
     {
