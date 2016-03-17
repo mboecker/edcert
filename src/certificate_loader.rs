@@ -92,11 +92,11 @@ fn test_save() {
     use chrono::Timelike;
     use chrono::UTC;
     use time::Duration;
-    use certificate_verificator::CertificateVerificator;
-    use certificate_verificator::NoRevoker;
+    use certificate_validator::CertificateValidator;
+    use certificate_validator::NoRevoker;
 
     let (mpk, msk) = ed25519::generate_keypair();
-    let cv = CertificateVerificator::new(&mpk, NoRevoker);
+    let cv = CertificateValidator::new(&mpk, NoRevoker);
 
     let meta = Meta::new_empty();
     let expires = UTC::now()

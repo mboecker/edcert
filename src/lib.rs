@@ -31,7 +31,7 @@ pub mod ed25519;
 pub mod meta;
 pub mod signature;
 pub mod certificate;
-pub mod certificate_verificator;
+pub mod certificate_validator;
 pub mod certificate_loader;
 
 #[test]
@@ -41,8 +41,8 @@ fn test_readme_example() {
     use time::Duration;
     use meta::Meta;
     use certificate::Certificate;
-    use certificate_verificator::CertificateVerificator;
-    use certificate_verificator::NoRevoker;
+    use certificate_validator::CertificateValidator;
+    use certificate_validator::NoRevoker;
 
     // create random master key
     let (mpk, msk) = ed25519::generate_keypair();
@@ -63,8 +63,8 @@ fn test_readme_example() {
     assert_eq!(true, cert.is_valid(&mpk).is_ok());
 
     // but wait! if we want to validate more than one certificate with the same
-    // public key, which is more than likely, we can use this
-    let cv = CertificateVerificator::new(&mpk, NoRevoker);
+    // public key, which is more than likely, we can use this:
+    let cv = CertificateValidator::new(&mpk, NoRevoker);
 
     // now we use the CV to validate certificates
     assert_eq!(true, cv.is_valid(&cert).is_ok());
@@ -73,8 +73,8 @@ fn test_readme_example() {
     let data = [1; 42];
 
     // and sign the data with the certificate
-    let signature = cert.sign(&data[..]).expect("This fails, if no private key is known to the certificate.");
+    let signature = cert.sign(&data).expect("This fails, if no private key is known to the certificate.");
 
     // the signature must be valid
-    assert_eq!(true, cert.verify(&data[..], &signature[..]));
+    assert_eq!(true, cert.verify(&data, &signature));
 }
