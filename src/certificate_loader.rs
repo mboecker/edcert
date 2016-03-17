@@ -22,7 +22,7 @@
 
 use certificate::Certificate;
 
-struct CertificateLoader;
+pub struct CertificateLoader;
 
 impl CertificateLoader {
     /// Saves this certificate into a folder: one file for the certificate and one file for the

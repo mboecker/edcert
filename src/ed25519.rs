@@ -105,7 +105,7 @@ fn test_ed25519_simple() {
 
     assert_eq!(verify(msg, &sig, &pk), false);
 
-    sig[0] = ((sig[0] as u16 - 1) % 256) as u8;
+    sig[0] = ((sig[0] as u16 + 255) % 256) as u8;
 
     assert_eq!(verify(msg, &sig, &pk), true);
 }
@@ -124,7 +124,7 @@ fn test_ed25519_shortmsg() {
 
     assert_eq!(verify(msg, &sig, &pk), false);
 
-    sig[0] = ((sig[0] as u16 - 1) % 256) as u8;
+    sig[0] = ((sig[0] as u16 + 255) % 256) as u8;
 
     assert_eq!(verify(msg, &sig, &pk), true);
 }
