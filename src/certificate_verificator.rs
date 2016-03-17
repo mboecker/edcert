@@ -64,65 +64,6 @@ impl<T: Revoker<Certificate>> CertificateVerificator<T> {
     }
 }
 
-struct HTTPRevoker {
-    revokeserver: String
-}
-
-impl HTTPRevoker {
-    pub fn new(revokeserver: &str) -> HTTPRevoker {
-        HTTPRevoker {
-            revokeserver: revokeserver.to_owned()
-        }
-    }
-}
-
-impl Revoker<Certificate> for HTTPRevoker {
-    fn is_revoked(&self, cert: &Certificate) -> Result<(), &'static str> {
-        use hyper::Client;
-        use std::io::Read;
-        use rustc_serialize::json::Json;
-
-        let bytestr = cert.public_key.to_bytestr();
-
-        let body = format!("pub={}", bytestr);
-
-        let client = Client::new();
-
-        let mut req = client.get(&format!("{}?{}", self.revokeserver, body))
-                            .body(&body[..])
-                            .send()
-                            .expect("Failed to request");
-
-        let mut response = String::new();
-        req.read_to_string(&mut response).expect("Failed to read response");
-
-        let response = response.trim();
-
-        println!("{}", response);
-
-        let json: Result<Json, _> = Json::from_str(response);
-
-        let json: Json = match json {
-            Ok(o) => o,
-            Err(_) => return Err("Failed to read JSON"),
-        };
-
-        let json = match json.find("revoked") {
-            Some(o) => o,
-            None => return Err("Invalid JSON"),
-        };
-
-        if json.is_boolean() {
-            match json.as_boolean().unwrap() {
-                true => Err("The certificate has been revoked."),
-                false => Ok(()),
-            }
-        } else {
-            Err("Invalid JSON")
-        }
-    }
-}
-
 pub struct NoRevoker;
 
 impl Revoker<Certificate> for NoRevoker {
@@ -141,8 +82,7 @@ fn test_verificator() {
 
     let (mpk, msk) = ed25519::generate_keypair();
 
-    //let cv = CertificateVerificator::new(&mpk, NoRevoker);
-    let cv = CertificateVerificator::new(&mpk, HTTPRevoker::new("https://rombie.de/is_revoked.php"));
+    let cv = CertificateVerificator::new(&mpk, NoRevoker);
 
     let meta = Meta::new_empty();
     let expires = UTC::now()

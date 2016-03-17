@@ -25,7 +25,6 @@ extern crate time;
 extern crate rustc_serialize;
 extern crate sodiumoxide;
 extern crate lzma;
-extern crate hyper;
 
 mod bytescontainer;
 pub mod ed25519;
