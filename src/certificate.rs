@@ -23,13 +23,11 @@
 use bytescontainer::BytesContainer;
 use meta::Meta;
 use signature::Signature;
-use rustc_serialize::json;
 use rustc_serialize::Encodable;
 use rustc_serialize::Encoder;
 use rustc_serialize::Decoder;
 use chrono;
 use ed25519;
-use lzma;
 
 /// This is the length of a ed25519 signature.
 pub const SIGNATURE_LEN: usize = 64 + CERTIFICATE_BYTE_LEN;
@@ -128,19 +126,6 @@ impl Certificate {
         self.private_key = Some(BytesContainer::new(private_key));
     }
 
-    /// This method checks, if this certificates expiration date is now or in the past.
-    pub fn is_expired(&self) -> bool {
-
-        // try to parse the string of this certificate
-        let expires = match chrono::DateTime::parse_from_rfc3339(&self.expires) {
-            Err(_) => return true,
-            Ok(expires) => expires.with_timezone(&chrono::UTC),
-        };
-
-        // if the parsing is ok, then this must be true for the certificate to be expired
-        expires <= chrono::UTC::now()
-    }
-
     /// This method returns a "hash". This is used to validate the certificate.
     /// All relevant information of the certificate is used to produce the hash,
     /// including the public key, meta data and the expiration date.
@@ -153,10 +138,10 @@ impl Certificate {
         self.meta.fill_bytes(&mut bytes[0..64]);
 
         // next 25 bytes are string representation of the expiration string
-        copy_bytes(&mut bytes[64..], self.expires.as_bytes(), 0, 0, 25);
+        ::copy_bytes(&mut bytes[64..], self.expires.as_bytes(), 0, 0, 25);
 
         // finally, the public key is appended
-        copy_bytes(&mut bytes[89..],
+        ::copy_bytes(&mut bytes[89..],
                    &self.public_key.get()[..],
                    0,
                    0,
@@ -212,6 +197,19 @@ impl Certificate {
         } else {
             Err("This certificate has no private key")
         }
+    }
+
+    /// This method checks, if this certificates expiration date is now or in the past.
+    pub fn is_expired(&self) -> bool {
+
+        // try to parse the string of this certificate
+        let expires = match chrono::DateTime::parse_from_rfc3339(&self.expires) {
+            Err(_) => return true,
+            Ok(expires) => expires.with_timezone(&chrono::UTC),
+        };
+
+        // if the parsing is ok, then this must be true for the certificate to be expired
+        expires <= chrono::UTC::now()
     }
 
     /// This method verifies that this certificate is valid by analyzing the trust chain.
@@ -289,56 +287,6 @@ impl Certificate {
     pub fn verify(&self, data: &[u8], signature: &[u8]) -> bool {
         let result = ed25519::verify(data, signature, self.get_public_key());
         result
-    }
-
-    /// takes a json-encoded byte vector and tries to create a certificate from it.
-    pub fn from_json(compressed: &[u8]) -> Result<Certificate, &'static str> {
-
-        // create a byte vector
-        let mut bytes: Vec<u8> = Vec::new();
-
-        // load slice into vector
-        bytes.extend(compressed);
-
-        // overwrite with LZMA magic bytes
-        let magic: [u8; 6] = [0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00];
-        copy_bytes(&mut bytes[0..7], &magic, 0, 0, 6);
-
-        // decompress the vector
-        let o = lzma::decompress(&bytes[..]);
-        if o.is_err() {
-            return Err("Failed to decompress certificate");
-        }
-
-        // read utf8 string
-        let o = String::from_utf8(o.unwrap());
-        if o.is_err() {
-            return Err("Failed to read UTF8 from decompressed vector");
-        }
-
-        // decode json object and return Certificate
-        let o = json::decode(&o.unwrap());
-        if o.is_err() {
-            Err("Failed to decode JSON")
-        } else {
-            Ok(o.unwrap())
-        }
-    }
-
-    /// Converts this certificate in a json-encoded byte vector.
-    pub fn to_json(&self) -> Vec<u8> {
-        let jsoncode = json::encode(self).expect("Failed to encode certificate");
-        let mut compressed = lzma::compress(&jsoncode.as_bytes(), 6).expect("failed to compress");
-        let magic = "edcert".as_bytes();
-        copy_bytes(&mut compressed[0..6], magic, 0, 0, 6);
-        compressed
-    }
-}
-
-/// This is a simple copy function. This should be replaced by memcpy or something...
-fn copy_bytes(dest: &mut [u8], src: &[u8], start_dest: usize, start_src: usize, len: usize) {
-    for i in 0..len {
-        dest[start_dest + i] = src[start_src + i];
     }
 }
 

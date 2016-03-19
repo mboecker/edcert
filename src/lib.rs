@@ -24,7 +24,6 @@ extern crate chrono;
 extern crate time;
 extern crate rustc_serialize;
 extern crate sodiumoxide;
-extern crate lzma;
 
 mod bytescontainer;
 pub mod ed25519;
@@ -32,7 +31,13 @@ pub mod meta;
 pub mod signature;
 pub mod certificate;
 pub mod certificate_validator;
-pub mod certificate_loader;
+
+/// This is a simple copy function. This should be replaced by memcpy or something...
+pub fn copy_bytes(dest: &mut [u8], src: &[u8], start_dest: usize, start_src: usize, len: usize) {
+    for i in 0..len {
+        dest[start_dest + i] = src[start_src + i];
+    }
+}
 
 #[test]
 fn test_readme_example() {

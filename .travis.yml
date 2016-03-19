@@ -17,6 +17,3 @@ addons:
 matrix:
   allow_failures:
     - rust: nightly
-cache:
-  directories:
-  - target

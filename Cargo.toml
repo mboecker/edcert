@@ -4,7 +4,7 @@ name = "edcert"
 version = "4.0.0"
 authors = [ "Marvin Böcker <marvin.boecker@udo.edu>" ]
 
-description = "a crate which can be used to sign and verify content based on ed25519."
+description = "A crate which can be used to sign and verify content based on Ed25519."
 repository = "https://github.com/zombiemuffin/edcert/"
 documentation = "https://zombiemuffin.github.io/edcert/edcert/"
 readme = "README.md"
