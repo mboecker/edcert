@@ -25,7 +25,6 @@ use certificate::Certificate;
 use rustc_serialize::Encodable;
 use rustc_serialize::Encoder;
 use rustc_serialize::Decoder;
-use certificate_validator::Validatable;
 
 #[derive(Clone,RustcDecodable,RustcEncodable,Debug)]
 pub struct Signature {
