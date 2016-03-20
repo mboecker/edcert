@@ -78,7 +78,8 @@ fn test_readme_example() {
     let data = [1; 42];
 
     // and sign the data with the certificate
-    let signature = cert.sign(&data).expect("This fails, if no private key is known to the certificate.");
+    let signature = cert.sign(&data)
+                        .expect("This fails, if no private key is known to the certificate.");
 
     // the signature must be valid
     assert_eq!(true, cert.verify(&data, &signature));

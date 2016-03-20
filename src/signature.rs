@@ -42,7 +42,7 @@ impl Signature {
     pub fn new(signature: Vec<u8>) -> Signature {
         Signature {
             hash: BytesContainer::new(signature),
-            signed_by: None
+            signed_by: None,
         }
     }
 
@@ -50,7 +50,7 @@ impl Signature {
     pub fn with_parent(parent: Box<Certificate>, signature: Vec<u8>) -> Signature {
         Signature {
             hash: BytesContainer::new(signature),
-            signed_by: Some(parent)
+            signed_by: Some(parent),
         }
     }
 

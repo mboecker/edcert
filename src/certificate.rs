@@ -143,10 +143,10 @@ impl Certificate {
 
         // finally, the public key is appended
         ::copy_bytes(&mut bytes[89..],
-                   &self.public_key.get()[..],
-                   0,
-                   0,
-                   PUBLIC_KEY_LEN);
+                     &self.public_key.get()[..],
+                     0,
+                     0,
+                     PUBLIC_KEY_LEN);
 
         bytes
     }

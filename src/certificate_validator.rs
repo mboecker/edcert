@@ -45,7 +45,7 @@ pub trait Revoker {
 /// This struct can be used to validate Certificates.
 pub struct CertificateValidator<R: Revoker> {
     revoker: R,
-    master_public_key: BytesContainer
+    master_public_key: BytesContainer,
 }
 
 impl<R: Revoker> CertificateValidator<R> {
@@ -58,7 +58,7 @@ impl<R: Revoker> CertificateValidator<R> {
 
         CertificateValidator {
             revoker: revoker,
-            master_public_key: BytesContainer::new(vec)
+            master_public_key: BytesContainer::new(vec),
         }
     }
 
