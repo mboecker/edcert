@@ -28,6 +28,7 @@ use rustc_serialize::Encoder;
 use rustc_serialize::Decoder;
 use chrono;
 use ed25519;
+use certificate_validator::Validatable;
 
 /// This is the length of a ed25519 signature.
 pub const SIGNATURE_LEN: usize = 64 + CERTIFICATE_BYTE_LEN;
@@ -287,6 +288,20 @@ impl Certificate {
     pub fn verify(&self, data: &[u8], signature: &[u8]) -> bool {
         let result = ed25519::verify(data, signature, self.get_public_key());
         result
+    }
+}
+
+impl Validatable for Certificate {
+    fn is_valid(&self, mpk: &[u8]) -> Result<(), &'static str> {
+        self.is_valid(mpk)
+    }
+
+    fn is_revokable(&self) -> bool {
+        true
+    }
+
+    fn get_id(&self) -> String {
+        self.public_key.to_bytestr()
     }
 }
 

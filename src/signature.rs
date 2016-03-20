@@ -25,6 +25,7 @@ use certificate::Certificate;
 use rustc_serialize::Encodable;
 use rustc_serialize::Encoder;
 use rustc_serialize::Decoder;
+use certificate_validator::Validatable;
 
 #[derive(Clone,RustcDecodable,RustcEncodable,Debug)]
 pub struct Signature {
@@ -42,7 +43,7 @@ impl Signature {
     pub fn new(signature: Vec<u8>) -> Signature {
         Signature {
             hash: BytesContainer::new(signature),
-            signed_by: None,
+            signed_by: None
         }
     }
 
@@ -50,14 +51,13 @@ impl Signature {
     pub fn with_parent(parent: Box<Certificate>, signature: Vec<u8>) -> Signature {
         Signature {
             hash: BytesContainer::new(signature),
-            signed_by: Some(parent),
+            signed_by: Some(parent)
         }
     }
 
     /// This method will return true iff the certificate has no parent certificate.
     /// It is then signed with the master key.
     pub fn is_signed_by_master(&self) -> bool {
-
         self.signed_by.is_none()
     }
 
