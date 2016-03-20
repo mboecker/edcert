@@ -279,7 +279,7 @@
 
     <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>verify</span>(<span class='ident'>msg</span>, <span class='kw-2'>&amp;</span><span class='ident'>sig</span>, <span class='kw-2'>&amp;</span><span class='ident'>pk</span>), <span class='boolval'>false</span>);
 
-    <span class='ident'>sig</span>[<span class='number'>0</span>] <span class='op'>=</span> ((<span class='ident'>sig</span>[<span class='number'>0</span>] <span class='kw'>as</span> <span class='ident'>u16</span> <span class='op'>-</span> <span class='number'>1</span>) <span class='op'>%</span> <span class='number'>256</span>) <span class='kw'>as</span> <span class='ident'>u8</span>;
+    <span class='ident'>sig</span>[<span class='number'>0</span>] <span class='op'>=</span> ((<span class='ident'>sig</span>[<span class='number'>0</span>] <span class='kw'>as</span> <span class='ident'>u16</span> <span class='op'>+</span> <span class='number'>255</span>) <span class='op'>%</span> <span class='number'>256</span>) <span class='kw'>as</span> <span class='ident'>u8</span>;
 
     <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>verify</span>(<span class='ident'>msg</span>, <span class='kw-2'>&amp;</span><span class='ident'>sig</span>, <span class='kw-2'>&amp;</span><span class='ident'>pk</span>), <span class='boolval'>true</span>);
 }
@@ -298,7 +298,7 @@
 
     <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>verify</span>(<span class='ident'>msg</span>, <span class='kw-2'>&amp;</span><span class='ident'>sig</span>, <span class='kw-2'>&amp;</span><span class='ident'>pk</span>), <span class='boolval'>false</span>);
 
-    <span class='ident'>sig</span>[<span class='number'>0</span>] <span class='op'>=</span> ((<span class='ident'>sig</span>[<span class='number'>0</span>] <span class='kw'>as</span> <span class='ident'>u16</span> <span class='op'>-</span> <span class='number'>1</span>) <span class='op'>%</span> <span class='number'>256</span>) <span class='kw'>as</span> <span class='ident'>u8</span>;
+    <span class='ident'>sig</span>[<span class='number'>0</span>] <span class='op'>=</span> ((<span class='ident'>sig</span>[<span class='number'>0</span>] <span class='kw'>as</span> <span class='ident'>u16</span> <span class='op'>+</span> <span class='number'>255</span>) <span class='op'>%</span> <span class='number'>256</span>) <span class='kw'>as</span> <span class='ident'>u8</span>;
 
     <span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>verify</span>(<span class='ident'>msg</span>, <span class='kw-2'>&amp;</span><span class='ident'>sig</span>, <span class='kw-2'>&amp;</span><span class='ident'>pk</span>), <span class='boolval'>true</span>);
 }

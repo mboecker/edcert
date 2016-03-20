@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["certificate",""],["certificate_verificator",""],["ed25519",""],["meta",""],["signature",""]]});
+initSidebarItems({"fn":[["copy_bytes","This is a simple copy function. This should be replaced by memcpy or something..."]],"mod":[["certificate",""],["certificate_validator",""],["ed25519",""],["meta",""],["signature",""]]});
