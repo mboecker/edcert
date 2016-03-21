@@ -92,7 +92,7 @@ impl Revoker for NoRevoker {
 }
 
 #[test]
-fn test_verificator() {
+fn test_validator() {
     use ed25519;
     use chrono::Timelike;
     use chrono::UTC;
