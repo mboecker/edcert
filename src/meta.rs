@@ -57,12 +57,12 @@ impl Meta {
     }
 
     /// This method returns a mutable reference to the tree object.
-    pub fn get_values_mut(&mut self) -> &mut BTreeMap<String, String> {
+    pub fn values_mut(&mut self) -> &mut BTreeMap<String, String> {
         &mut self.values
     }
 
     /// This method returns a reference to the tree object.
-    pub fn get_values(&self) -> &BTreeMap<String, String> {
+    pub fn values(&self) -> &BTreeMap<String, String> {
         &self.values
     }
 

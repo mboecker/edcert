@@ -62,7 +62,7 @@ impl Signature {
 
     /// This method will return the parent Certificate, or None, if it is signed with the
     /// master key.
-    pub fn get_parent(&self) -> Option<&Certificate> {
+    pub fn parent(&self) -> Option<&Certificate> {
         if self.signed_by.is_none() {
             None
         } else {
@@ -72,7 +72,7 @@ impl Signature {
     }
 
     /// This method will return the signature given by the parent.
-    pub fn get_hash(&self) -> &Vec<u8> {
+    pub fn hash(&self) -> &Vec<u8> {
         &self.hash.get()
     }
 }

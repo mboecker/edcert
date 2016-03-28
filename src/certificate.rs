@@ -47,10 +47,10 @@ pub const CERTIFICATE_BYTE_LEN: usize =
 pub struct Certificate {
     /// The meta element contains data associated with the certificate.
     /// Common data is "use-for" which contains a list of permissions.
-    pub meta: Meta,
+    meta: Meta,
 
     /// the public key of this certificate.
-    pub public_key: BytesContainer,
+    public_key: BytesContainer,
 
     /// the private key, if it is known.
     private_key: Option<BytesContainer>,
@@ -87,23 +87,23 @@ impl Certificate {
     }
 
     /// This method returns a mutable reference to the meta structure.
-    pub fn get_meta_mut(&mut self) -> &mut Meta {
+    pub fn meta_mut(&mut self) -> &mut Meta {
         &mut self.meta
     }
 
     /// This method returns a reference to the meta structure.
-    pub fn get_meta(&self) -> &Meta {
+    pub fn meta(&self) -> &Meta {
         &self.meta
     }
 
     /// This method returns a reference to the public key.
-    pub fn get_public_key(&self) -> &Vec<u8> {
+    pub fn public_key(&self) -> &Vec<u8> {
         &self.public_key.get()
     }
 
     /// This method returns the private key, if it is known, or None if the certificate has been
     /// initialized without the private key.
-    pub fn get_private_key<'a>(&'a self) -> Option<&'a Vec<u8>> {
+    pub fn private_key<'a>(&'a self) -> Option<&'a Vec<u8>> {
         if self.has_private_key() {
             let vec = self.private_key.as_ref().unwrap().get();
             Some(vec)
@@ -118,8 +118,13 @@ impl Certificate {
     }
 
     /// This method returns the expiration date as a RFC 3339 string.
-    pub fn get_expires(&self) -> &str {
+    pub fn expiration_date(&self) -> &str {
         &self.expires
+    }
+
+    /// This method returns either the signature, or None.
+    pub fn signature(&self) -> Option<&Signature> {
+        self.signature.as_ref()
     }
 
     /// This method replaces the current private key of this certificate with the given one.
@@ -152,10 +157,10 @@ impl Certificate {
     }
 
     /// This method returns the parent certificate of this certificate, if it exists.
-    pub fn get_parent(&self) -> Option<&Certificate> {
+    pub fn parent(&self) -> Option<&Certificate> {
         if self.is_signed() {
             let sig = &self.signature.as_ref().unwrap();
-            sig.get_parent()
+            sig.parent()
         } else {
             None
         }
@@ -170,7 +175,7 @@ impl Certificate {
     /// This method signs the given data and returns the signature.
     pub fn sign(&self, data: &[u8]) -> Option<Vec<u8>> {
         if self.has_private_key() {
-            let signature = ed25519::sign(data, self.get_private_key().unwrap());
+            let signature = ed25519::sign(data, self.private_key().unwrap());
             Some(signature)
         } else {
             None
@@ -229,7 +234,7 @@ impl Certificate {
             if signature.is_signed_by_master() {
 
                 // get the signature hash
-                let hash = signature.get_hash();
+                let hash = signature.hash();
 
                 // verify it for the safehash, master public key and the signature
                 let r = ed25519::verify(bytes, hash, master_pk);
@@ -253,10 +258,10 @@ impl Certificate {
             } else {
 
                 // if it is not signed by the master key, get the parent
-                let parent: &Certificate = signature.get_parent().unwrap();
+                let parent: &Certificate = signature.parent().unwrap();
 
                 // verify the signature of the parent
-                let sign_real = parent.verify(bytes, &signature.get_hash());
+                let sign_real = parent.verify(bytes, &signature.hash());
 
                 // verify that the parent is valid
                 let parent_real = parent.is_valid(&master_pk).is_ok();
@@ -286,7 +291,7 @@ impl Certificate {
 
     /// This method verifies that the given signature is valid for the given data.
     pub fn verify(&self, data: &[u8], signature: &[u8]) -> bool {
-        let result = ed25519::verify(data, signature, self.get_public_key());
+        let result = ed25519::verify(data, signature, self.public_key());
         result
     }
 }
@@ -324,7 +329,7 @@ fn test_generate_certificate() {
 
     let b = Certificate::generate_random(meta, expires);
 
-    assert!(a.get_public_key() != b.get_public_key());
+    assert!(a.public_key() != b.public_key());
 }
 
 // #[test]
