@@ -28,6 +28,7 @@ use meta::Meta;
 use certificate::Certificate;
 use certificate_validator::CertificateValidator;
 use certificate_validator::NoRevoker;
+use certificate_validator::Validatable;
 
 // create random master key
 let (mpk, msk) = ed25519::generate_keypair();
@@ -58,7 +59,8 @@ assert_eq!(true, cv.is_valid(&cert).is_ok());
 let data = [1; 42];
 
 // and sign the data with the certificate
-let signature = cert.sign(&data).expect("This fails, if no private key is known to the certificate.");
+let signature = cert.sign(&data)
+                    .expect("This fails, if no private key is known to the certificate.");
 
 // the signature must be valid
 assert_eq!(true, cert.verify(&data, &signature));

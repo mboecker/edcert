@@ -50,6 +50,9 @@ impl BytesContainer {
     }
 
     pub fn from_bytestr(bytestr: &str) -> Result<BytesContainer, ()> {
+        if bytestr.is_empty() {
+            return Ok(BytesContainer::new(vec![]));
+        }
         match bytestr.from_hex() {
             Ok(vec) => Ok(BytesContainer::new(vec)),
             _ => Err(()),
@@ -60,6 +63,7 @@ impl BytesContainer {
 impl Decodable for BytesContainer {
     fn decode<T: Decoder>(d: &mut T) -> Result<BytesContainer, T::Error> {
         let bytestr = try!(String::decode(d));
+        println!("{:?}", bytestr);
         match BytesContainer::from_bytestr(&bytestr) {
             Ok(bc) => Ok(bc),
             Err(_) => Err(d.error("Failed to parse hex string")),
@@ -79,6 +83,29 @@ impl Drop for BytesContainer {
             self.bytes[i] = 0;
         }
     }
+}
+
+#[test]
+fn test_encoding() {
+    use rustc_serialize::json;
+
+    let bc = BytesContainer::new(vec![1, 2, 3, 100]);
+    assert_eq!(json::encode(&bc).unwrap(), "\"01020364\"");
+    let bc = BytesContainer::new(vec![]);
+    assert_eq!(json::encode(&bc).unwrap(), "\"\"");
+}
+
+#[test]
+fn test_decoding() {
+    use rustc_serialize::json;
+
+    let bytestr = "\"A099\"";
+    let bc: BytesContainer = json::decode(bytestr).unwrap();
+    assert_eq!(bc.get(), &vec![160, 153]);
+
+    let bytestr = "\"\"";
+    let bc: BytesContainer = json::decode(bytestr).unwrap();
+    assert_eq!(bc.get(), &vec![]);
 }
 
 #[test]
