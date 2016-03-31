@@ -132,6 +132,36 @@ impl Certificate {
         self.private_key = Some(BytesContainer::new(private_key));
     }
 
+    /// This method checks, if the "use-for" meta tag contains the use "edcert.sign"
+    pub fn can_sign(&self) -> Result<(), &'static str> {
+        use rustc_serialize::json;
+
+        let meta = self.meta();
+
+        println!("meta: {:?}", meta);
+
+        match meta.get("use-for") {
+            Some(use_for) => {
+                let use_for: Vec<String> = match json::decode(use_for) {
+                    Ok(x) => x,
+                    Err(_) => {
+                        return Err("Failed to parse content of meta value \"use-for\"");
+                    }
+                };
+
+                for u in use_for {
+                    println!("{} ?= edcert.sign?", u);
+                    if u == "edcert.sign" {
+                        return Ok(());
+                    }
+                }
+
+                Err("This certificate is not allowed to sign certificates")
+            }
+            None => Err("The meta value \"use-for\" could not be found"),
+        }
+    }
+
     /// This method returns a "hash". This is used to validate the certificate.
     /// All relevant information of the certificate is used to produce the hash,
     /// including the public key, meta data and the expiration date.
@@ -218,8 +248,15 @@ impl Certificate {
         expires <= chrono::UTC::now()
     }
 
-    /// This method verifies that this certificate is valid by analyzing the trust chain.
-    pub fn is_valid(&self, master_pk: &[u8]) -> Result<(), &'static str> {
+    /// This method verifies that the given signature is valid for the given data.
+    pub fn verify(&self, data: &[u8], signature: &[u8]) -> bool {
+        let result = ed25519::verify(data, signature, self.public_key());
+        result
+    }
+}
+
+impl Validatable for Certificate {
+    fn is_valid(&self, master_pk: &[u8]) -> Result<(), &'static str> {
         if !self.is_signed() {
             Err("This certificate isn't signed, so it can't be valid.")
         } else {
@@ -266,17 +303,27 @@ impl Certificate {
                 // verify that the parent is valid
                 let parent_real = parent.is_valid(&master_pk).is_ok();
 
+                // can parent sign other certificates?
+                let parent_can_sign = parent.can_sign().is_ok();
+
                 // if the signature is valid
                 if sign_real {
 
                     // and the parent certificate is valid
                     if parent_real {
 
-                        // and the certificate is not expired
-                        if !self.is_expired() {
-                            Ok(())
+                        // and the parent can sign
+                        if parent_can_sign {
+
+                            // and the certificate is not expired
+                            if !self.is_expired() {
+                                Ok(())
+                            } else {
+                                Err("The certificate is expired")
+                            }
+
                         } else {
-                            Err("The certificate is expired")
+                            Err("The parent isn't allowed to sign certificates.")
                         }
 
                     } else {
@@ -289,17 +336,6 @@ impl Certificate {
         }
     }
 
-    /// This method verifies that the given signature is valid for the given data.
-    pub fn verify(&self, data: &[u8], signature: &[u8]) -> bool {
-        let result = ed25519::verify(data, signature, self.public_key());
-        result
-    }
-}
-
-impl Validatable for Certificate {
-    fn is_valid(&self, mpk: &[u8]) -> Result<(), &'static str> {
-        self.is_valid(mpk)
-    }
 
     fn is_revokable(&self) -> bool {
         true

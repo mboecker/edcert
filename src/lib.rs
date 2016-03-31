@@ -48,6 +48,7 @@ fn test_readme_example() {
     use certificate::Certificate;
     use certificate_validator::CertificateValidator;
     use certificate_validator::NoRevoker;
+    use certificate_validator::Validatable;
 
     // create random master key
     let (mpk, msk) = ed25519::generate_keypair();

@@ -121,3 +121,46 @@ fn test_validator() {
 
     assert_eq!(cv.is_valid(&cert_invalid).is_ok(), false);
 }
+
+#[test]
+fn test_meta_can_sign() {
+    use ed25519;
+    use chrono::Timelike;
+    use chrono::UTC;
+    use time::Duration;
+    use meta::Meta;
+    use certificate::Certificate;
+
+    let (mpk, msk) = ed25519::generate_keypair();
+
+    let cv = CertificateValidator::new(&mpk, NoRevoker);
+
+    let mut meta = Meta::new_empty();
+    let expires = UTC::now()
+                      .checked_add(Duration::days(90))
+                      .expect("Failed to add 90 days to expiration date.")
+                      .with_nanosecond(0)
+                      .unwrap();
+
+    {
+        let mut cert = Certificate::generate_random(meta.clone(), expires.clone());
+        cert.sign_with_master(&msk);
+        assert_eq!(cv.is_valid(&cert).is_ok(), true);
+
+        let mut cert_child = Certificate::generate_random(meta.clone(), expires.clone());
+        cert.sign_certificate(&mut cert_child).expect("Failed to sign certificate");
+        assert_eq!(cv.is_valid(&cert_child).is_ok(), false);
+    }
+
+    {
+        meta.set("use-for", "[\"edcert.sign\"]");
+
+        let mut cert = Certificate::generate_random(meta.clone(), expires.clone());
+        cert.sign_with_master(&msk);
+        assert_eq!(cv.is_valid(&cert).is_ok(), true);
+
+        let mut cert_child = Certificate::generate_random(meta.clone(), expires.clone());
+        cert.sign_certificate(&mut cert_child).expect("Failed to sign certificate");
+        assert_eq!(cv.is_valid(&cert_child).is_ok(), true);
+    }
+}
