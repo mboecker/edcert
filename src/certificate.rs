@@ -151,8 +151,6 @@ impl Certificate {
 
         let meta = self.meta();
 
-        println!("meta: {:?}", meta);
-
         match meta.get("use-for") {
             Some(use_for) => {
                 let use_for: Vec<String> = match json::decode(use_for) {
@@ -163,7 +161,6 @@ impl Certificate {
                 };
 
                 for u in use_for {
-                    println!("{} ?= edcert.sign?", u);
                     if u == "edcert.sign" {
                         return Ok(());
                     }
@@ -334,11 +331,9 @@ impl Validatable for Certificate {
                             } else {
                                 Err("The certificate is expired")
                             }
-
                         } else {
                             Err("The parent isn't allowed to sign certificates.")
                         }
-
                     } else {
                         Err("The parent is invalid.")
                     }
@@ -348,7 +343,6 @@ impl Validatable for Certificate {
             }
         }
     }
-
 
     fn is_revokable(&self) -> bool {
         true
