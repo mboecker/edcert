@@ -21,7 +21,8 @@
 // SOFTWARE.
 
 //! This crate is a simple digital signature crate and can be used to verify data integrity by
-//! using public-key cryptography.
+//! using public-key cryptography. It uses the "super-fast, super-secure" elliptic curve and
+//! digital signature algorithm [Ed25519](https://ed25519.cr.yp.to/) (EdDSA).
 //!
 //! It provides the struct "Certificate", which holds the public key, metadata and a signature.
 //!
@@ -32,6 +33,19 @@
 //! trust chain, which top-most Certificate has been signed with the right private key.
 //!
 //! See also [here](https://en.wikipedia.org/wiki/EdDSA).
+//!
+//! ## Other crates
+//!
+//! To use the edcert ecosystem, there are a few other crates to make your life simpler:
+//!
+//! - [edcert-letter](https://crates.io/crates/edcert-letter), which provides a container for
+//!    signed data, Letter&lt;T&gt;.
+//! - [edcert-restrevoke](https://crates.io/crates/edcert-restrevoke), which provides a REST-based
+//!   revokation system.
+//! - [edcert-compressor](https://crates.io/crates/edcert-compressor), which provides methods to
+//!   (de)compress Certificates using JSON/LZMA and manages loading/saving certificates for you.
+//! - [edcert-tools](https://crates.io/crates/edcert-tools), which provides a binary for
+//!   generation, signing, validation, etc using edcert (and all of the above).
 
 extern crate chrono;
 extern crate time;
