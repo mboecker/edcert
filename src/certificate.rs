@@ -33,9 +33,10 @@ use rustc_serialize::Decoder;
 use chrono;
 use ed25519;
 use certificate_validator::Validatable;
+use certificate_validator::Validator;
 
 /// This is the length of a ed25519 signature.
-pub const SIGNATURE_LEN: usize = 64 + CERTIFICATE_BYTE_LEN;
+pub const SIGNATURE_LEN: usize = ed25519::SIGNATURE_LEN;
 
 /// This is the length of a ed25519 private key.
 pub const PRIVATE_KEY_LEN: usize = ed25519::PRIVATE_KEY_LEN;
@@ -266,7 +267,7 @@ impl Certificate {
 }
 
 impl Validatable for Certificate {
-    fn is_valid(&self, master_pk: &[u8]) -> Result<(), &'static str> {
+    fn is_valid<V: Validator>(&self, cv: &V) -> Result<(), &'static str> {
         if !self.is_signed() {
             Err("This certificate isn't signed, so it can't be valid.")
         } else {
@@ -284,7 +285,7 @@ impl Validatable for Certificate {
                 let hash = signature.hash();
 
                 // verify it for the safehash, master public key and the signature
-                let r = ed25519::verify(bytes, hash, master_pk);
+                let r = ed25519::verify(bytes, hash, cv.get_master_public_key());
 
                 // if it is valid
                 if r {
@@ -311,7 +312,7 @@ impl Validatable for Certificate {
                 let sign_real = parent.verify(bytes, &signature.hash());
 
                 // verify that the parent is valid
-                let parent_real = parent.is_valid(&master_pk).is_ok();
+                let parent_real = cv.is_valid(parent);
 
                 // can parent sign other certificates?
                 let parent_can_sign = parent.can_sign().is_ok();
@@ -320,7 +321,7 @@ impl Validatable for Certificate {
                 if sign_real {
 
                     // and the parent certificate is valid
-                    if parent_real {
+                    if parent_real.is_ok() {
 
                         // and the parent can sign
                         if parent_can_sign {

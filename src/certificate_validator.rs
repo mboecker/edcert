@@ -25,11 +25,16 @@
 
 use bytescontainer::BytesContainer;
 
+pub trait Validator {
+    fn is_valid<V: Validatable>(&self, cert: &V) -> Result<(), &'static str>;
+    fn get_master_public_key(&self) -> &[u8];
+}
+
 /// This trait is implemented for types, which must be validated.
 pub trait Validatable {
-
-    /// This method is given the master public key and should check, if it is valid given that key.
-    fn is_valid(&self, &[u8]) -> Result<(), &'static str>;
+    /// This method is given validator. It can access the master public key using the
+    /// CertificateValidator.
+    fn is_valid<T: Validator>(&self, &T) -> Result<(), &'static str>;
 
     /// This method should return true iff the object can be revoked.
     /// That is true for a public key, but not for a signature.
@@ -56,7 +61,6 @@ impl<R: Revoker> CertificateValidator<R> {
     /// Call this to create a CV with a revoke server.
     /// For every certificate the revoke server is asked if it is known.
     pub fn new(master_public_key: &[u8; 32], revoker: R) -> CertificateValidator<R> {
-
         let mut vec: Vec<u8> = Vec::new();
         vec.extend_from_slice(master_public_key);
 
@@ -66,11 +70,18 @@ impl<R: Revoker> CertificateValidator<R> {
         }
     }
 
+    /// This method calls the revoker to check the status of the certificate cert.
+    pub fn is_revoked<V: Validatable>(&self, cert: &V) -> Result<(), &'static str> {
+        self.revoker.is_revoked(cert)
+    }
+}
+
+impl<R: Revoker> Validator for CertificateValidator<R> {
     /// Checks the certificate if it is valid.
     /// If the CV knows a revoke server, that is queried as well.
-    pub fn is_valid<V: Validatable>(&self, cert: &V) -> Result<(), &'static str> {
+    fn is_valid<V: Validatable>(&self, cert: &V) -> Result<(), &'static str> {
         // this returns an Error if it fails
-        try!(cert.is_valid(&self.master_public_key.get()[..]));
+        try!(cert.is_valid(self));
 
         // this returns an Error if it fails
         try!(self.revoker.is_revoked(cert));
@@ -79,8 +90,8 @@ impl<R: Revoker> CertificateValidator<R> {
         Ok(())
     }
 
-    pub fn is_revoked<V: Validatable>(&self, cert: &V) -> Result<(), &'static str> {
-        self.revoker.is_revoked(cert)
+    fn get_master_public_key(&self) -> &[u8] {
+        &self.master_public_key.get()[..]
     }
 }
 

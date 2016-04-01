@@ -76,6 +76,7 @@ fn test_readme_example() {
     use certificate_validator::CertificateValidator;
     use certificate_validator::NoRevoker;
     use certificate_validator::Validatable;
+    use certificate_validator::Validator;
 
     // create random master key
     let (mpk, msk) = ed25519::generate_keypair();
@@ -92,11 +93,7 @@ fn test_readme_example() {
     // sign certificate with master key
     cert.sign_with_master(&msk);
 
-    // the certificate is valid given the master public key
-    assert_eq!(true, cert.is_valid(&mpk).is_ok());
-
-    // but wait! if we want to validate more than one certificate with the same
-    // public key, which is more than likely, we can use this:
+    // create a validator
     let cv = CertificateValidator::new(&mpk, NoRevoker);
 
     // now we use the CV to validate certificates
