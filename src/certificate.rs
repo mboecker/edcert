@@ -56,7 +56,7 @@ pub const CERTIFICATE_BYTE_LEN: usize =
 /// 4. Data can be verified by using the verify method.
 /// 5. A Certificate can be validated by a CertificateValidator, because it implements the
 /// Validatable trait.
-#[derive(Clone,RustcDecodable,RustcEncodable,Debug)]
+#[derive(Clone,RustcDecodable,RustcEncodable,Debug,PartialEq)]
 pub struct Certificate {
     /// The meta element contains data associated with the certificate.
     /// Common data is "use-for" which contains a list of permissions.

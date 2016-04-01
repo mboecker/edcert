@@ -28,7 +28,7 @@ use rustc_serialize::Encoder;
 
 /// This struct holds meta data for a Certificate. It is also capable of generating a hash, which
 /// is based on SHA512. The hash is equal, regardless of the ordering of meta elements.
-#[derive(Clone,RustcEncodable,RustcDecodable,Debug)]
+#[derive(Clone,RustcEncodable,RustcDecodable,Debug,PartialEq)]
 pub struct Meta {
     values: BTreeMap<String, String>,
 }

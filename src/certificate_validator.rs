@@ -46,6 +46,7 @@ pub trait Revoker {
 }
 
 /// This struct can be used to validate Certificates.
+#[derive(Clone,Debug,PartialEq)]
 pub struct CertificateValidator<R: Revoker> {
     revoker: R,
     master_public_key: BytesContainer,

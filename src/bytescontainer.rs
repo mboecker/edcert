@@ -26,7 +26,7 @@ use rustc_serialize::Decoder;
 use rustc_serialize::Decodable;
 use rustc_serialize::hex::FromHex;
 
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug,PartialEq)]
 pub struct BytesContainer {
     bytes: Vec<u8>,
 }

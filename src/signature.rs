@@ -30,7 +30,7 @@ use rustc_serialize::Encoder;
 use rustc_serialize::Decoder;
 
 /// This struct contains a ed25519 signature and a reference to the Certificate, which signed it.
-#[derive(Clone,RustcDecodable,RustcEncodable,Debug)]
+#[derive(Clone,RustcDecodable,RustcEncodable,Debug,PartialEq)]
 pub struct Signature {
     /// This is the actual signature generated with the certificate data and the parents private key
     /// It can be validated with the parents public key.
