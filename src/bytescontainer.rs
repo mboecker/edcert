@@ -63,7 +63,6 @@ impl BytesContainer {
 impl Decodable for BytesContainer {
     fn decode<T: Decoder>(d: &mut T) -> Result<BytesContainer, T::Error> {
         let bytestr = try!(String::decode(d));
-        println!("{:?}", bytestr);
         match BytesContainer::from_bytestr(&bytestr) {
             Ok(bc) => Ok(bc),
             Err(_) => Err(d.error("Failed to parse hex string")),
