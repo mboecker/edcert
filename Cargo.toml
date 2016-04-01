@@ -1,6 +1,6 @@
 [package]
 name = "edcert"
-version = "6.0.2"
+version = "6.1.0"
 authors = [ "Marvin Böcker <marvin.boecker@udo.edu>" ]
 
 description = "A crate which can be used to sign and verify content based on Ed25519."
