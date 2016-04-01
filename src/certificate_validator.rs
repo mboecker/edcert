@@ -20,6 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+//! This module contains the CertificateValidator, which can be used to validate certificates, as
+//! well as some traits used by the struct.
+
 use bytescontainer::BytesContainer;
 
 /// This trait is implemented for types, which must be validated.

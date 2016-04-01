@@ -20,12 +20,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+//! This module contains the signature struct, a container for the Ed25519 signature and a
+//! reference to the signer.
+
 use bytescontainer::BytesContainer;
 use certificate::Certificate;
 use rustc_serialize::Encodable;
 use rustc_serialize::Encoder;
 use rustc_serialize::Decoder;
 
+/// This struct contains a ed25519 signature and a reference to the Certificate, which signed it.
 #[derive(Clone,RustcDecodable,RustcEncodable,Debug)]
 pub struct Signature {
     /// This is the actual signature generated with the certificate data and the parents private key

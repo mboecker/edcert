@@ -20,11 +20,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+//! This module contains the struct which holds the meta data of a Certificate.
+
 use std::collections::BTreeMap;
 use rustc_serialize::Encodable;
 use rustc_serialize::Encoder;
-use sodiumoxide::crypto::hash::sha512;
 
+/// This struct holds meta data for a Certificate. It is also capable of generating a hash, which
+/// is based on SHA512. The hash is equal, regardless of the ordering of meta elements.
 #[derive(Clone,RustcEncodable,RustcDecodable,Debug)]
 pub struct Meta {
     values: BTreeMap<String, String>,
@@ -69,6 +72,7 @@ impl Meta {
     /// This method fills the given byte vector with a "hash" which is created from all keys
     /// and values.
     pub fn fill_bytes(&self, bytes: &mut [u8]) {
+        use sodiumoxide::crypto::hash::sha512;
 
         let mut hash = [0; 64];
 

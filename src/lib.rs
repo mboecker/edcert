@@ -20,6 +20,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+//! This crate is a simple digital signature crate and can be used to verify data integrity by
+//! using public-key cryptography.
+//!
+//! It provides the struct "Certificate", which holds the public key, metadata and a signature.
+//!
+//! # The basics
+//! A Certificate can be signed by a master key, or another Certificate. The top-most Certificate
+//! must be signed with the master key, or it will not be valid. For validation, the master public
+//! key will be given. This way, a Certificate can only be valid, if it has been signed with a
+//! trust chain, which top-most Certificate has been signed with the right private key.
+//!
+//! See also [here](https://en.wikipedia.org/wiki/EdDSA).
+
 extern crate chrono;
 extern crate time;
 extern crate rustc_serialize;

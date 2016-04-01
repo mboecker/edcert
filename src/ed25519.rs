@@ -20,6 +20,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+//! This module contains a wrapper around the libsodium implementation of ed25519.
+//! It reduces the size of signatures to 64 byte, and will also reduce the size of private keys
+//! to 32 byte.
+
 use sodiumoxide;
 use sodiumoxide::crypto::sign::ed25519;
 
