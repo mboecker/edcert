@@ -26,9 +26,11 @@ use chrono::UTC;
 use time::Duration;
 use meta::Meta;
 use certificate::Certificate;
-use certificate_validator::CertificateValidator;
-use certificate_validator::NoRevoker;
-use certificate_validator::Validatable;
+use validator::Validatable;
+use validator::Validator;
+use root_validator::RootValidator;
+use trust_validator::TrustValidator;
+use revoker::NoRevoker;
 
 // create random master key
 let (mpk, msk) = ed25519::generate_keypair();
@@ -45,15 +47,21 @@ let mut cert = Certificate::generate_random(meta, expires);
 // sign certificate with master key
 cert.sign_with_master(&msk);
 
-// the certificate is valid given the master public key
-assert_eq!(true, cert.is_valid(&mpk).is_ok());
-
-// but wait! if we want to validate more than one certificate with the same
-// public key, which is more than likely, we can use this:
-let cv = CertificateValidator::new(&mpk, NoRevoker);
+// we can use a RootValidator, which analyzes the trust chain.
+// in this case, the top-most certificate must be signed with the right private key for mpk.
+let cv = RootValidator::new(&mpk, NoRevoker);
 
 // now we use the CV to validate certificates
 assert_eq!(true, cv.is_valid(&cert).is_ok());
+
+// we could also use a TrustValidator. It's like RootValidator, but you can also give trusted
+// certificates. If the chain contains one of these, the upper certificates aren't checked
+// with the master public key. We can give any 32 byte key here, it doesn't matter.
+let mut tcv = TrustValidator::new(&[0; 32], NoRevoker);
+tcv.add_trusted_certificates(vec![cert.get_id()]);
+
+// even though we gave a wrong master key, this certificate is valid, because it is trusted.
+assert_eq!(true, tcv.is_valid(&cert).is_ok());
 
 // now we sign data with it
 let data = [1; 42];

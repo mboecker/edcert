@@ -161,13 +161,12 @@ impl Certificate {
                     }
                 };
 
-                for u in use_for {
-                    if u == "edcert.sign" {
-                        return Ok(());
-                    }
-                }
+                if use_for.contains(&"edcert.sign".to_string()) {
+                    Ok(())
+                } else {
 
-                Err("This certificate is not allowed to sign certificates")
+                    Err("This certificate is not allowed to sign certificates")
+                }
             }
             None => Err("The meta value \"use-for\" could not be found"),
         }

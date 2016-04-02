@@ -79,7 +79,8 @@ fn test_readme_example() {
     use validator::Validatable;
     use validator::Validator;
     use root_validator::RootValidator;
-    use root_validator::NoRevoker;
+    use trust_validator::TrustValidator;
+    use revoker::NoRevoker;
 
     // create random master key
     let (mpk, msk) = ed25519::generate_keypair();
@@ -96,11 +97,21 @@ fn test_readme_example() {
     // sign certificate with master key
     cert.sign_with_master(&msk);
 
-    // create a validator, which analyzes the trust chain
+    // we can use a RootValidator, which analyzes the trust chain.
+    // in this case, the top-most certificate must be signed with the right private key for mpk.
     let cv = RootValidator::new(&mpk, NoRevoker);
 
     // now we use the CV to validate certificates
     assert_eq!(true, cv.is_valid(&cert).is_ok());
+
+    // we could also use a TrustValidator. It's like RootValidator, but you can also give trusted
+    // certificates. If the chain contains one of these, the upper certificates aren't checked
+    // with the master public key. We can give any 32 byte key here, it doesn't matter.
+    let mut tcv = TrustValidator::new(&[0; 32], NoRevoker);
+    tcv.add_trusted_certificates(vec![cert.get_id()]);
+
+    // even though we gave a wrong master key, this certificate is valid, because it is trusted.
+    assert_eq!(true, tcv.is_valid(&cert).is_ok());
 
     // now we sign data with it
     let data = [1; 42];

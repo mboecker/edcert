@@ -53,7 +53,7 @@ fn test_validator() {
     use meta::Meta;
     use certificate::Certificate;
     use root_validator::RootValidator;
-    use root_validator::NoRevoker;
+    use revoker::NoRevoker;
 
     let (mpk, msk) = ed25519::generate_keypair();
 
@@ -86,7 +86,7 @@ fn test_meta_can_sign() {
     use meta::Meta;
     use certificate::Certificate;
     use root_validator::RootValidator;
-    use root_validator::NoRevoker;
+    use revoker::NoRevoker;
 
     let (mpk, msk) = ed25519::generate_keypair();
 

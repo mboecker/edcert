@@ -67,6 +67,11 @@ impl<R: Revoker> TrustValidator<R> {
         }
     }
 
+    /// This method trusts the give certificates.
+    pub fn add_trusted_certificates<T: AsRef<[String]>>(&mut self, trusted_certificates: T) {
+        self.trusted_certificates.extend_from_slice(trusted_certificates.as_ref());
+    }
+
     /// This method calls the revoker to check the status of the certificate cert.
     pub fn is_revoked<V: Validatable>(&self, cert: &V) -> Result<(), &'static str> {
         self.revoker.is_revoked(cert)
@@ -108,8 +113,22 @@ fn test_trusted_certificates() {
     let mut meta = Meta::new_empty();
     meta.set("use-for", r#"["edcert.sign"]"#);
 
-    let cert: Certificate = Certificate::generate_random(meta, DateTime::parse_from_rfc3339("2020-01-01T00:00:00+00:00").unwrap().with_timezone(&UTC));
-    let mut child: Certificate = Certificate::generate_random(Meta::new_empty(), DateTime::parse_from_rfc3339("2020-01-01T00:00:00+00:00").unwrap().with_timezone(&UTC));
+    let cert: Certificate = Certificate::generate_random(meta,
+                                                         DateTime::parse_from_rfc3339("2020-01-0\
+                                                                                       1T00:00:0\
+                                                                                       0+00:00")
+                                                             .unwrap()
+                                                             .with_timezone(&UTC));
+    let mut child: Certificate = Certificate::generate_random(Meta::new_empty(),
+                                                              DateTime::parse_from_rfc3339("2020\
+                                                                                            -01-\
+                                                                                            01T0\
+                                                                                            0:00\
+                                                                                            :00+\
+                                                                                            00:0\
+                                                                                            0")
+                                                                  .unwrap()
+                                                                  .with_timezone(&UTC));
 
     cert.sign_certificate(&mut child).unwrap();
 
@@ -118,11 +137,40 @@ fn test_trusted_certificates() {
     let cv = TrustValidator::with_trusted_certificates(&[0; 32], NoRevoker, trusted);
 
     match cv.is_valid(&child) {
-        Err(x) => { println!("{:?}", x); panic!(); }
+        Err(x) => {
+            println!("{:?}", x);
+            panic!();
+        }
         _ => {}
     };
 
     assert_eq!(cv.is_valid(&child).is_ok(), true);
+}
+
+#[test]
+fn test_add_trusted_certificates() {
+    use meta::Meta;
+    use certificate::Certificate;
+    use revoker::NoRevoker;
+    use chrono::datetime::DateTime;
+    use chrono::UTC;
+
+    let meta = Meta::new_empty();
+
+    let cert: Certificate = Certificate::generate_random(meta,
+                                                         DateTime::parse_from_rfc3339("2020-01-0\
+                                                                                       1T00:00:0\
+                                                                                       0+00:00")
+                                                             .unwrap()
+                                                             .with_timezone(&UTC));
+
+    let mut cv = TrustValidator::new(&[0; 32], NoRevoker);
+
+    assert_eq!(cv.is_valid(&cert).is_ok(), false);
+
+    cv.add_trusted_certificates(vec![cert.get_id()]);
+
+    assert_eq!(cv.is_valid(&cert).is_ok(), true);
 }
 
 #[test]
@@ -136,8 +184,19 @@ fn test_trusted_certificates_fail() {
     let mut meta = Meta::new_empty();
     meta.set("use-for", r#"["edcert.sign"]"#);
 
-    let cert: Certificate = Certificate::generate_random(meta, DateTime::parse_from_rfc3339("2020-01-01T00:00:00+00:00").unwrap().with_timezone(&UTC));
-    let child: Certificate = Certificate::generate_random(Meta::new_empty(), DateTime::parse_from_rfc3339("2020-01-01T00:00:00+00:00").unwrap().with_timezone(&UTC));
+    let cert: Certificate = Certificate::generate_random(meta,
+                                                         DateTime::parse_from_rfc3339("2020-01-0\
+                                                                                       1T00:00:0\
+                                                                                       0+00:00")
+                                                             .unwrap()
+                                                             .with_timezone(&UTC));
+    let child: Certificate = Certificate::generate_random(Meta::new_empty(),
+                                                          DateTime::parse_from_rfc3339("2020-01-\
+                                                                                        01T00:00\
+                                                                                        :00+00:0\
+                                                                                        0")
+                                                              .unwrap()
+                                                              .with_timezone(&UTC));
 
     let trusted = vec![cert.get_id()];
 

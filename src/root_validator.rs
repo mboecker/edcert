@@ -25,11 +25,7 @@
 use validator::Validator;
 use validator::Validatable;
 use bytescontainer::BytesContainer;
-
-/// This trait is used by a CertificateValidator to check, if a Certificate has been revoked.
-pub trait Revoker {
-    fn is_revoked<T: Validatable>(&self, &T) -> Result<(), &'static str>;
-}
+use revoker::Revoker;
 
 /// This is a simple Validator, which checks the trust chain for valid certificates. The top-most
 /// Certificate must be signed with the right master private key.
@@ -74,16 +70,5 @@ impl<R: Revoker> Validator for RootValidator<R> {
 
     fn get_master_public_key(&self) -> &[u8] {
         &self.master_public_key.get()[..]
-    }
-}
-
-/// Use this in a CertificateValidator to *NOT* check Certificate whether they have been revoked.
-/// This is *not* recommended though. If a private key has been disclosed, the certificate MUST be
-/// revoked and invalidated, or else the whole system is endangered.
-pub struct NoRevoker;
-
-impl Revoker for NoRevoker {
-    fn is_revoked<T>(&self, _: &T) -> Result<(), &'static str> {
-        Ok(())
     }
 }
