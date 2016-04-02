@@ -32,8 +32,8 @@ use rustc_serialize::Encoder;
 use rustc_serialize::Decoder;
 use chrono;
 use ed25519;
-use certificate_validator::Validatable;
-use certificate_validator::Validator;
+use validator::Validatable;
+use validator::Validator;
 
 /// This is the length of a ed25519 signature.
 pub const SIGNATURE_LEN: usize = ed25519::SIGNATURE_LEN;

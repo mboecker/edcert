@@ -23,8 +23,7 @@
 //! This module contains the CertificateValidator, which can be used to validate certificates, as
 //! well as some traits used by the struct.
 
-use bytescontainer::BytesContainer;
-
+/// This trait can be implemented to verify Validatables with it.
 pub trait Validator {
     fn is_valid<V: Validatable>(&self, cert: &V) -> Result<(), &'static str>;
     fn get_master_public_key(&self) -> &[u8];
@@ -45,67 +44,6 @@ pub trait Validatable {
     fn get_id(&self) -> String;
 }
 
-/// This trait is used by a CertificateValidator to check, if a Certificate has been revoked.
-pub trait Revoker {
-    fn is_revoked<T: Validatable>(&self, &T) -> Result<(), &'static str>;
-}
-
-/// This struct can be used to validate Certificates.
-#[derive(Clone,Debug,PartialEq)]
-pub struct CertificateValidator<R: Revoker> {
-    revoker: R,
-    master_public_key: BytesContainer,
-}
-
-impl<R: Revoker> CertificateValidator<R> {
-    /// Call this to create a CV with a revoke server.
-    /// For every certificate the revoke server is asked if it is known.
-    pub fn new(master_public_key: &[u8; 32], revoker: R) -> CertificateValidator<R> {
-        let mut vec: Vec<u8> = Vec::new();
-        vec.extend_from_slice(master_public_key);
-
-        CertificateValidator {
-            revoker: revoker,
-            master_public_key: BytesContainer::new(vec),
-        }
-    }
-
-    /// This method calls the revoker to check the status of the certificate cert.
-    pub fn is_revoked<V: Validatable>(&self, cert: &V) -> Result<(), &'static str> {
-        self.revoker.is_revoked(cert)
-    }
-}
-
-impl<R: Revoker> Validator for CertificateValidator<R> {
-    /// Checks the certificate if it is valid.
-    /// If the CV knows a revoke server, that is queried as well.
-    fn is_valid<V: Validatable>(&self, cert: &V) -> Result<(), &'static str> {
-        // this returns an Error if it fails
-        try!(cert.is_valid(self));
-
-        // this returns an Error if it fails
-        try!(self.revoker.is_revoked(cert));
-
-        // if nothing fails, the certificate is valid!
-        Ok(())
-    }
-
-    fn get_master_public_key(&self) -> &[u8] {
-        &self.master_public_key.get()[..]
-    }
-}
-
-/// Use this in a CertificateValidator to *NOT* check Certificate whether they have been revoked.
-/// This is *not* recommended though. If a private key has been disclosed, the certificate MUST be
-/// revoked and invalidated, or else the whole system is endangered.
-pub struct NoRevoker;
-
-impl Revoker for NoRevoker {
-    fn is_revoked<T>(&self, _: &T) -> Result<(), &'static str> {
-        Ok(())
-    }
-}
-
 #[test]
 fn test_validator() {
     use ed25519;
@@ -114,10 +52,12 @@ fn test_validator() {
     use time::Duration;
     use meta::Meta;
     use certificate::Certificate;
+    use root_validator::RootValidator;
+    use root_validator::NoRevoker;
 
     let (mpk, msk) = ed25519::generate_keypair();
 
-    let cv = CertificateValidator::new(&mpk, NoRevoker);
+    let cv = RootValidator::new(&mpk, NoRevoker);
 
     let meta = Meta::new_empty();
     let expires = UTC::now()
@@ -145,10 +85,12 @@ fn test_meta_can_sign() {
     use time::Duration;
     use meta::Meta;
     use certificate::Certificate;
+    use root_validator::RootValidator;
+    use root_validator::NoRevoker;
 
     let (mpk, msk) = ed25519::generate_keypair();
 
-    let cv = CertificateValidator::new(&mpk, NoRevoker);
+    let cv = RootValidator::new(&mpk, NoRevoker);
 
     let mut meta = Meta::new_empty();
     let expires = UTC::now()

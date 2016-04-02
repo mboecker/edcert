@@ -57,7 +57,10 @@ pub mod ed25519;
 pub mod meta;
 pub mod signature;
 pub mod certificate;
-pub mod certificate_validator;
+pub mod validator;
+pub mod revoker;
+pub mod root_validator;
+pub mod trust_validator;
 
 /// This is a simple copy function. This should be replaced by memcpy or something...
 pub fn copy_bytes(dest: &mut [u8], src: &[u8], start_dest: usize, start_src: usize, len: usize) {
@@ -73,10 +76,10 @@ fn test_readme_example() {
     use time::Duration;
     use meta::Meta;
     use certificate::Certificate;
-    use certificate_validator::CertificateValidator;
-    use certificate_validator::NoRevoker;
-    use certificate_validator::Validatable;
-    use certificate_validator::Validator;
+    use validator::Validatable;
+    use validator::Validator;
+    use root_validator::RootValidator;
+    use root_validator::NoRevoker;
 
     // create random master key
     let (mpk, msk) = ed25519::generate_keypair();
@@ -93,8 +96,8 @@ fn test_readme_example() {
     // sign certificate with master key
     cert.sign_with_master(&msk);
 
-    // create a validator
-    let cv = CertificateValidator::new(&mpk, NoRevoker);
+    // create a validator, which analyzes the trust chain
+    let cv = RootValidator::new(&mpk, NoRevoker);
 
     // now we use the CV to validate certificates
     assert_eq!(true, cv.is_valid(&cert).is_ok());

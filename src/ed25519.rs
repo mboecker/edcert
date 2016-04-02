@@ -152,7 +152,7 @@ fn test_testvectors() {
 
     let prv = decode("b18e1d0045995ec3d010c387ccfeb984d783af8fbb0f40fa7db126d889f6dadd77f48b59cae\
                       da77751ed138b0ec667ff50f8768c25d48309a8f386a2bad187fb");
-                      
+
     let pbl = decode("77f48b59caeda77751ed138b0ec667ff50f8768c25d48309a8f386a2bad187fb");
 
     let msg = decode("916c7d1d268fc0e77c1bef238432573c39be577bbea099893\
