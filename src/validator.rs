@@ -39,9 +39,14 @@ pub trait Validatable {
     /// That is true for a public key, but not for a signature.
     fn is_revokable(&self) -> bool;
 
-    /// If is_revokable() returns true, you must implement this function. It should return a
-    /// representation by which the object can be identified by the revoke-list or revoke server.
-    fn get_id(&self) -> String;
+    /// If is_revokable() returns true, you must implement this function. It must return a string
+    /// which is unique to the keypair.
+    fn get_key_id(&self) -> String;
+
+    /// This method must be implemented for all certificates and must return a string with was
+    /// created from all important information in the certificate, eg. public key, expiration date
+    /// and meta data.
+    fn get_certificate_id(&self) -> String;
 }
 
 #[test]

@@ -108,7 +108,7 @@ fn test_readme_example() {
     // certificates. If the chain contains one of these, the upper certificates aren't checked
     // with the master public key. We can give any 32 byte key here, it doesn't matter.
     let mut tcv = TrustValidator::new(&[0; 32], NoRevoker);
-    tcv.add_trusted_certificates(vec![cert.get_id()]);
+    tcv.add_trusted_certificates(vec![cert.get_certificate_id()]);
 
     // even though we gave a wrong master key, this certificate is valid, because it is trusted.
     assert_eq!(true, tcv.is_valid(&cert).is_ok());

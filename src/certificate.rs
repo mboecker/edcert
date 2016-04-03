@@ -348,8 +348,14 @@ impl Validatable for Certificate {
         true
     }
 
-    fn get_id(&self) -> String {
+    fn get_key_id(&self) -> String {
         self.public_key.to_bytestr()
+    }
+
+    fn get_certificate_id(&self) -> String {
+        let bytes = self.safehash();
+        let bytestr: Vec<String> = bytes.iter().map(|b| format!("{:02X}", b)).collect();
+        bytestr.join("")
     }
 }
 

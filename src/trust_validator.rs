@@ -83,7 +83,7 @@ impl<R: Revoker> Validator for TrustValidator<R> {
     /// If the CV knows a revoke server, that is queried as well.
     fn is_valid<V: Validatable>(&self, cert: &V) -> Result<(), &'static str> {
         // if the certificate is trusted, it is valid
-        if self.trusted_certificates.contains(&cert.get_id()) {
+        if self.trusted_certificates.contains(&cert.get_certificate_id()) {
             return Ok(());
         }
 
@@ -132,7 +132,7 @@ fn test_trusted_certificates() {
 
     cert.sign_certificate(&mut child).unwrap();
 
-    let trusted = vec![cert.get_id()];
+    let trusted = vec![cert.get_certificate_id()];
 
     let cv = TrustValidator::with_trusted_certificates(&[0; 32], NoRevoker, trusted);
 
@@ -168,7 +168,7 @@ fn test_add_trusted_certificates() {
 
     assert_eq!(cv.is_valid(&cert).is_ok(), false);
 
-    cv.add_trusted_certificates(vec![cert.get_id()]);
+    cv.add_trusted_certificates(vec![cert.get_certificate_id()]);
 
     assert_eq!(cv.is_valid(&cert).is_ok(), true);
 }
@@ -198,7 +198,7 @@ fn test_trusted_certificates_fail() {
                                                               .unwrap()
                                                               .with_timezone(&UTC));
 
-    let trusted = vec![cert.get_id()];
+    let trusted = vec![cert.get_certificate_id()];
 
     let cv = TrustValidator::with_trusted_certificates(&[0; 32], NoRevoker, trusted);
 
