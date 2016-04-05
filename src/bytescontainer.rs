@@ -36,7 +36,7 @@ impl BytesContainer {
         BytesContainer { bytes: bytes }
     }
 
-    pub fn get<'a>(&'a self) -> &'a Vec<u8> {
+    pub fn get(&self) -> &Vec<u8> {
         &self.bytes
     }
 

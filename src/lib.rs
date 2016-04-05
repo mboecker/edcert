@@ -22,15 +22,15 @@
 
 //! This crate is a simple digital signature crate and can be used to verify data integrity by
 //! using public-key cryptography. It uses the "super-fast, super-secure" elliptic curve and
-//! digital signature algorithm [Ed25519](https://ed25519.cr.yp.to/) (EdDSA).
+//! digital signature algorithm [Ed25519](https://ed25519.cr.yp.to/).
 //!
-//! It provides the struct "Certificate", which holds the public key, metadata and a signature.
+//! It provides the struct `Certificate`, which holds the public key, metadata and a signature.
 //!
 //! # The basics
-//! A Certificate can be signed by a master key, or another Certificate. The top-most Certificate
+//! A `Certificate` can be signed by a master key, or another `Certificate`. The top-most `Certificate`
 //! must be signed with the master key, or it will not be valid. For validation, the master public
-//! key will be given. This way, a Certificate can only be valid, if it has been signed with a
-//! trust chain, which top-most Certificate has been signed with the right private key.
+//! key will be given. This way, a `Certificate` can only be valid, if it has been signed with a
+//! trust chain, which top-most `Certificate` has been signed with the right private key.
 //!
 //! See also [here](https://en.wikipedia.org/wiki/EdDSA).
 //!
@@ -43,7 +43,7 @@
 //! - [edcert-restrevoke](https://crates.io/crates/edcert-restrevoke), which provides a REST-based
 //!   revokation system.
 //! - [edcert-compressor](https://crates.io/crates/edcert-compressor), which provides methods to
-//!   (de)compress Certificates using JSON/LZMA and manages loading/saving certificates for you.
+//!   (de)compress `Certificate`s using JSON/LZMA and manages loading/saving certificates for you.
 //! - [edcert-tools](https://crates.io/crates/edcert-tools), which provides a binary for
 //!   generation, signing, validation, etc using edcert (and all of the above).
 

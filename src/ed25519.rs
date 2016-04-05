@@ -38,12 +38,12 @@ pub const SIGNATURE_LEN: usize = 64;
 static mut inited: bool = false;
 
 /// This method generates a random ed25519 keypair from a cryptographically secure source
-/// (on unix this is /dev/urandom). Returns (public_key, private_key).
+/// (on unix this is /dev/urandom). Returns (`public_key`, `private_key`).
 pub fn generate_keypair() -> ([u8; PUBLIC_KEY_LEN], [u8; PRIVATE_KEY_LEN]) {
 
     unsafe {
 
-        // we cann do this simple unsafe "lazy init",
+        // we can do this simple unsafe "lazy init",
         // because it would be OK to call init() twice.
 
         if !inited {
@@ -85,6 +85,7 @@ pub fn verify(data: &[u8], signature: &[u8], public_key: &[u8]) -> bool {
     let pk = ed25519::PublicKey::from_slice(public_key);
     let pk = pk.as_ref().unwrap();
 
+    // allocate buffer on heap for signature and data.
     let mut vi = Vec::with_capacity(SIGNATURE_LEN + data.len());
     vi.extend_from_slice(&signature);
     vi.extend_from_slice(data);

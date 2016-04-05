@@ -24,13 +24,13 @@
 
 use validator::Validatable;
 
-/// This trait is used by a CertificateValidator to check, if a Certificate has been revoked.
+/// This trait is used by a `CertificateValidator` to check, if a `Certificate` has been revoked.
 pub trait Revoker {
     fn is_revoked<T: Validatable>(&self, &T) -> Result<(), &'static str>;
 }
 
-/// Use this in a Validator to *NOT* check Certificate whether they have been revoked.
-/// This is *not* recommended though. If a private key has been disclosed, the certificate MUST be
+/// Use this in a Validator to *NOT* check `Certificate`s whether they have been revoked.
+/// This is *not* recommended though. If a private key has been disclosed, the `Certificate` MUST be
 /// revoked and invalidated, or else the whole system is endangered.
 pub struct NoRevoker;
 

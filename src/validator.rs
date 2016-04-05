@@ -20,10 +20,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-//! This module contains the CertificateValidator, which can be used to validate certificates, as
-//! well as some traits used by the struct.
+//! This module contains the `CertificateValidator`, which can be used to validate `Certificate`s,
+//! as well as some traits used by the struct.
 
-/// This trait can be implemented to verify Validatables with it.
+/// This trait can be implemented to verify `Validatable`s with it.
 pub trait Validator {
     fn is_valid<V: Validatable>(&self, cert: &V) -> Result<(), &'static str>;
     fn get_master_public_key(&self) -> &[u8];
