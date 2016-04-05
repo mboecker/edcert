@@ -131,6 +131,12 @@ impl Certificate {
         self.private_key.is_some()
     }
 
+    /// This method clears the private key, if it has one.
+    pub fn remove_private_key(&mut self) {
+        // because the BytesContainer goes out of scope, it will be dropped and the memory will be cleared.
+        self.private_key = None
+    }
+
     /// This method returns the expiration date as a RFC 3339 string.
     pub fn expiration_date(&self) -> &str {
         &self.expires
