@@ -92,11 +92,9 @@ pub fn verify(data: &[u8], signature: &[u8], public_key: &[u8]) -> bool {
 
     let r = ed25519::verify(&vi, &pk);
 
-    if r.is_err() {
-        false
-    } else {
-        let bytes = r.unwrap();
-        bytes == data
+    match r {
+        Err(_) => false,
+        Ok(x) => x == data,
     }
 }
 
