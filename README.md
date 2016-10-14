@@ -23,7 +23,7 @@ the well known cryptography libraray by Dan Bernstein et al.
 ```rust
 use chrono::Timelike;
 use chrono::UTC;
-use time::Duration;
+use chrono::duration::Duration;
 use meta::Meta;
 use certificate::Certificate;
 use validator::Validatable;
