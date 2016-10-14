@@ -54,7 +54,7 @@ fn test_validator() {
     use ed25519;
     use chrono::Timelike;
     use chrono::UTC;
-    use time::Duration;
+    use chrono::duration::Duration;
     use meta::Meta;
     use certificate::Certificate;
     use root_validator::RootValidator;
@@ -87,7 +87,7 @@ fn test_meta_can_sign() {
     use ed25519;
     use chrono::Timelike;
     use chrono::UTC;
-    use time::Duration;
+    use chrono::duration::Duration;
     use meta::Meta;
     use certificate::Certificate;
     use root_validator::RootValidator;

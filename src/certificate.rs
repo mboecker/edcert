@@ -27,9 +27,9 @@
 use bytescontainer::BytesContainer;
 use meta::Meta;
 use signature::Signature;
-use rustc_serialize::Encodable;
-use rustc_serialize::Encoder;
-use rustc_serialize::Decoder;
+//use rustc_serialize::Encodable;
+//use rustc_serialize::Encoder;
+//use rustc_serialize::Decoder;
 use chrono;
 use ed25519;
 use validator::Validatable;
@@ -367,7 +367,7 @@ impl Validatable for Certificate {
 fn test_generate_certificate() {
     use chrono::Timelike;
     use chrono::UTC;
-    use time::Duration;
+    use chrono::duration::Duration;
 
     let meta = Meta::new_empty();
     let expires = UTC::now()

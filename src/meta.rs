@@ -23,8 +23,8 @@
 //! This module contains the struct which holds the meta data of a Certificate.
 
 use std::collections::BTreeMap;
-use rustc_serialize::Encodable;
-use rustc_serialize::Encoder;
+//use rustc_serialize::Encodable;
+//use rustc_serialize::Encoder;
 
 /// This struct holds meta data for a Certificate. It is also capable of generating a hash, which
 /// is based on SHA512. The hash is equal, regardless of the ordering of meta elements.

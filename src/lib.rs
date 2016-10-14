@@ -48,7 +48,6 @@
 //!   generation, signing, validation, etc using edcert (and all of the above).
 
 extern crate chrono;
-extern crate time;
 extern crate rustc_serialize;
 extern crate sodiumoxide;
 
@@ -73,7 +72,7 @@ pub fn copy_bytes(dest: &mut [u8], src: &[u8], start_dest: usize, start_src: usi
 fn test_readme_example() {
     use chrono::Timelike;
     use chrono::UTC;
-    use time::Duration;
+    use chrono::duration::Duration;
     use meta::Meta;
     use certificate::Certificate;
     use validator::Validatable;

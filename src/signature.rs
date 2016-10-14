@@ -25,9 +25,9 @@
 
 use bytescontainer::BytesContainer;
 use certificate::Certificate;
-use rustc_serialize::Encodable;
-use rustc_serialize::Encoder;
-use rustc_serialize::Decoder;
+//use rustc_serialize::Encodable;
+//use rustc_serialize::Encoder;
+//use rustc_serialize::Decoder;
 
 /// This struct contains a ed25519 signature and a reference to the Certificate, which signed it.
 #[derive(Clone,RustcDecodable,RustcEncodable,Debug,PartialEq)]
