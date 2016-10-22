@@ -44,7 +44,7 @@ pub const SIGNATURE_LEN: usize = 64;
 /// This method generates a random ed25519 keypair from a cryptographically secure source
 /// (on unix this is /dev/urandom). Returns (`public_key`, `private_key`).
 pub fn generate_keypair() -> ([u8; PUBLIC_KEY_LEN], [u8; PRIVATE_KEY_LEN]) {
-    
+
     // Initialize the random number generator provided by libsodium.
     START.call_once(|| { sodiumoxide::init(); });
 
@@ -64,34 +64,33 @@ pub fn generate_keypair() -> ([u8; PUBLIC_KEY_LEN], [u8; PRIVATE_KEY_LEN]) {
 pub fn sign(data: &[u8], private_key: &[u8]) -> Vec<u8> {
     assert_eq!(private_key.len(), PRIVATE_KEY_LEN);
 
+    use sodiumoxide::crypto::sign::ed25519::Signature;
+
     let sk = ed25519::SecretKey::from_slice(private_key);
     let sk = sk.as_ref().unwrap();
 
-    let s = ed25519::sign(data, sk);
+    let sig = match ed25519::sign_detached(data, sk) {
+        Signature(signature) => signature
+    };
 
-    let mut v = Vec::new();
-    v.extend_from_slice(&s[0..64]);
-    v
+    let mut vec = Vec::new();
+    vec.extend_from_slice(&sig);
+    vec
 }
 
 /// This method takes a data vector, a signature and a public key and returns true, if the
 /// signature has been created using the correct private key.
 pub fn verify(data: &[u8], signature: &[u8], public_key: &[u8]) -> bool {
+    assert_eq!(signature.len(), SIGNATURE_LEN);
+    assert_eq!(public_key.len(), PUBLIC_KEY_LEN);
 
     let pk = ed25519::PublicKey::from_slice(public_key);
     let pk = pk.as_ref().unwrap();
 
-    // allocate buffer on heap for signature and data.
-    let mut vi = Vec::with_capacity(SIGNATURE_LEN + data.len());
-    vi.extend_from_slice(signature);
-    vi.extend_from_slice(data);
+    let sig = ed25519::Signature::from_slice(signature);
+    let sig = sig.as_ref().unwrap();
 
-    let r = ed25519::verify(&vi, pk);
-
-    match r {
-        Err(_) => false,
-        Ok(x) => x == data,
-    }
+    ed25519::verify_detached(sig, data, pk)
 }
 
 #[test]
