@@ -22,10 +22,12 @@
 
 //! This module provides a validator, which analyzes the trust chain to validate a Certificate.
 
+use validator::ValidationError;
 use validator::Validator;
 use validator::Validatable;
 use bytescontainer::BytesContainer;
 use revoker::Revoker;
+use revoker::Revokable;
 
 /// This is a simple Validator, which checks the trust chain for valid certificates. The top-most
 /// Certificate must be signed with the right master private key.
@@ -47,19 +49,14 @@ impl<R: Revoker> RootValidator<R> {
             master_public_key: BytesContainer::new(vec),
         }
     }
-
-    /// This method calls the revoker to check the status of the certificate cert.
-    pub fn is_revoked<V: Validatable>(&self, cert: &V) -> Result<(), &'static str> {
-        self.revoker.is_revoked(cert)
-    }
 }
 
 impl<R: Revoker> Validator for RootValidator<R> {
     /// Checks the certificate if it is valid.
     /// If the CV knows a revoke server, that is queried as well.
-    fn is_valid<V: Validatable>(&self, cert: &V) -> Result<(), &'static str> {
+    fn is_valid<V: Validatable + Revokable>(&self, cert: &V) -> Result<(), ValidationError> {
         // this returns an Error if it fails
-        try!(cert.is_valid(self));
+        try!(cert.self_validate(self));
 
         // this returns an Error if it fails
         try!(self.revoker.is_revoked(cert));
@@ -68,7 +65,9 @@ impl<R: Revoker> Validator for RootValidator<R> {
         Ok(())
     }
 
-    fn get_master_public_key(&self) -> &[u8] {
-        &self.master_public_key.get()[..]
+    /// Checks if the signature is valid.
+    fn is_signature_valid(&self, data: &[u8], signature: &[u8]) -> bool {
+        use ed25519;
+        ed25519::verify(data, signature, self.master_public_key.get())
     }
 }

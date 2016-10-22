@@ -27,13 +27,15 @@
 use bytescontainer::BytesContainer;
 use meta::Meta;
 use signature::Signature;
-//use rustc_serialize::Encodable;
-//use rustc_serialize::Encoder;
-//use rustc_serialize::Decoder;
 use chrono;
 use ed25519;
+use fingerprint::Fingerprint;
+use validator::ValidationError;
 use validator::Validatable;
 use validator::Validator;
+use revoker::RevokeError;
+use revoker::Revokable;
+use revoker::Revoker;
 
 /// This is the length of a ed25519 signature.
 pub const SIGNATURE_LEN: usize = ed25519::SIGNATURE_LEN;
@@ -112,7 +114,7 @@ impl Certificate {
 
     /// This method returns a reference to the public key.
     pub fn public_key(&self) -> &Vec<u8> {
-        &self.public_key.get()
+        self.public_key.get()
     }
 
     /// This method returns the private key, if it is known, or None if the certificate has been
@@ -271,7 +273,7 @@ impl Certificate {
 }
 
 impl Validatable for Certificate {
-    fn is_valid<V: Validator>(&self, cv: &V) -> Result<(), &'static str> {
+    fn self_validate<V: Validator>(&self, cv: &V) -> Result<(), ValidationError> {
         if self.is_signed() {
             // get a hash unique to this certificate
             let bytes: &[u8] = &self.safehash()[..];
@@ -286,14 +288,12 @@ impl Validatable for Certificate {
                 let hash = signature.hash();
 
                 // verify it for the safehash, master public key and the signature
-                let r = ed25519::verify(bytes, hash, cv.get_master_public_key());
-
                 // if it is valid
-                if r {
+                if cv.is_signature_valid(bytes, hash) {
 
                     // check if the certificate is expired
                     if self.is_expired() {
-                        Err("This certificate is expired")
+                        Err(ValidationError::Expired)
                     } else {
                         Ok(())
                     }
@@ -301,7 +301,7 @@ impl Validatable for Certificate {
                 } else {
 
                     // else the signature isn't from the master key
-                    Err("Failed to verify master signature")
+                    Err(ValidationError::SignatureInvalid)
                 }
 
             } else {
@@ -310,7 +310,7 @@ impl Validatable for Certificate {
                 let parent: &Certificate = signature.parent().unwrap();
 
                 // verify the signature of the parent
-                let sign_real = parent.verify(bytes, &signature.hash());
+                let sign_real = parent.verify(bytes, signature.hash());
 
                 // verify that the parent is valid
                 let parent_real = cv.is_valid(parent);
@@ -329,37 +329,38 @@ impl Validatable for Certificate {
 
                             // and the certificate is not expired
                             if self.is_expired() {
-                                Err("The certificate is expired")
+                                Err(ValidationError::Expired)
                             } else {
                                 Ok(())
                             }
                         } else {
-                            Err("The parent isn't allowed to sign certificates.")
+                            // The certificate isn't allowed to sign certificates.
+                            Err(ValidationError::Other)
                         }
                     } else {
-                        Err("The parent is invalid.")
+                        Err(ValidationError::ParentInvalid)
                     }
                 } else {
-                    Err("The signature of the parent isn invalid.")
+                    // Parent signature is invalid.
+                    Err(ValidationError::ParentInvalid)
                 }
             }
         } else {
-            Err("This certificate isn't signed, so it can't be valid.")
+            // Certificate is unsigned
+            Err(ValidationError::SignatureInvalid)
         }
     }
+}
 
-    fn is_revokable(&self) -> bool {
-        true
+impl Fingerprint for Certificate {
+    fn fingerprint(&self) -> Vec<u8> {
+        self.public_key().clone()
     }
+}
 
-    fn get_key_id(&self) -> String {
-        self.public_key.to_bytestr()
-    }
-
-    fn get_certificate_id(&self) -> String {
-        let bytes = self.safehash();
-        let bytestr: Vec<String> = bytes.iter().map(|b| format!("{:02X}", b)).collect();
-        bytestr.join("")
+impl Revokable for Certificate {
+    fn self_check_revoked<R: Revoker>(&self, revoker: &R) -> Result<(), RevokeError> {
+        revoker.is_revoked(self)
     }
 }
 
@@ -371,10 +372,10 @@ fn test_generate_certificate() {
 
     let meta = Meta::new_empty();
     let expires = UTC::now()
-                      .checked_add(Duration::days(90))
-                      .expect("Failed to add a day to expiration date.")
-                      .with_nanosecond(0)
-                      .unwrap();
+        .checked_add(Duration::days(90))
+        .expect("Failed to add a day to expiration date.")
+        .with_nanosecond(0)
+        .unwrap();
 
     let a = Certificate::generate_random(meta, expires);
 

@@ -20,33 +20,57 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-//! This module contains the `CertificateValidator`, which can be used to validate `Certificate`s,
+//! This module contains the `Validator`, which can be used to validate `Certificate`s,
 //! as well as some traits used by the struct.
+
+use revoker::RevokeError;
+use revoker::Revokable;
+
+/// This type contains information about why a validation failed.
+#[derive(Debug, Hash, PartialEq, Eq)]
+pub enum ValidationError {
+    /// Some signature is invalid.
+    SignatureInvalid,
+
+    /// The parent certificate is invalid.
+    ParentInvalid,
+
+    /// Something is expired.
+    Expired,
+
+    /// The certificate has been revoked.
+    Revoked,
+
+    /// Some other error happened while trying to validate. (eg. a server was not responding)
+    Other,
+}
+
+impl From<RevokeError> for ValidationError {
+    fn from(r: RevokeError) -> ValidationError {
+        match r {
+            RevokeError::Revoked => ValidationError::Revoked,
+            _ => ValidationError::Other,
+        }
+    }
+}
+
+/// This trait must be implemented for types, which must be validated.
+pub trait Validatable {
+    /// This method is given a validator. It can access the master public key indirectly using the
+    /// `Validator`.
+    ///
+    /// **Don't call this method directly, it will be called if you call Validator::is_valid(_).**
+    fn self_validate<T: Validator>(&self, validator: &T) -> Result<(), ValidationError>;
+}
 
 /// This trait can be implemented to verify `Validatable`s with it.
 pub trait Validator {
-    fn is_valid<V: Validatable>(&self, cert: &V) -> Result<(), &'static str>;
-    fn get_master_public_key(&self) -> &[u8];
-}
+    /// This method is called with a certificate or a secure container, which should be validated.
+    fn is_valid<V: Validatable + Revokable>(&self, cert: &V) -> Result<(), ValidationError>;
 
-/// This trait is implemented for types, which must be validated.
-pub trait Validatable {
-    /// This method is given validator. It can access the master public key using the
-    /// CertificateValidator.
-    fn is_valid<T: Validator>(&self, &T) -> Result<(), &'static str>;
-
-    /// This method should return true iff the object can be revoked.
-    /// That is true for a public key, but not for a signature.
-    fn is_revokable(&self) -> bool;
-
-    /// If is_revokable() returns true, you must implement this function. It must return a string
-    /// which is unique to the keypair.
-    fn get_key_id(&self) -> String;
-
-    /// This method must be implemented for all certificates and must return a string with was
-    /// created from all important information in the certificate, eg. public key, expiration date
-    /// and meta data.
-    fn get_certificate_id(&self) -> String;
+    /// This method will check if the given signature is a valid signature issued by the master
+    /// key.
+    fn is_signature_valid(&self, data: &[u8], signature: &[u8]) -> bool;
 }
 
 #[test]
@@ -66,10 +90,10 @@ fn test_validator() {
 
     let meta = Meta::new_empty();
     let expires = UTC::now()
-                      .checked_add(Duration::days(90))
-                      .expect("Failed to add 90 days to expiration date.")
-                      .with_nanosecond(0)
-                      .unwrap();
+        .checked_add(Duration::days(90))
+        .expect("Failed to add 90 days to expiration date.")
+        .with_nanosecond(0)
+        .unwrap();
 
     let mut cert = Certificate::generate_random(meta.clone(), expires.clone());
 
@@ -99,10 +123,10 @@ fn test_meta_can_sign() {
 
     let mut meta = Meta::new_empty();
     let expires = UTC::now()
-                      .checked_add(Duration::days(90))
-                      .expect("Failed to add 90 days to expiration date.")
-                      .with_nanosecond(0)
-                      .unwrap();
+        .checked_add(Duration::days(90))
+        .expect("Failed to add 90 days to expiration date.")
+        .with_nanosecond(0)
+        .unwrap();
 
     {
         let mut cert = Certificate::generate_random(meta.clone(), expires.clone());

@@ -47,25 +47,36 @@
 //! - [edcert-tools](https://crates.io/crates/edcert-tools), which provides a binary for
 //!   generation, signing, validation, etc using edcert (and all of the above).
 
+#![deny(missing_docs)]
+
+// External crates.
 extern crate chrono;
 extern crate rustc_serialize;
 extern crate sodiumoxide;
 
+// Internal modules
 mod bytescontainer;
 pub mod ed25519;
+
+// External modules
+pub mod certificate;
+pub mod fingerprint;
 pub mod meta;
 pub mod signature;
-pub mod certificate;
+
+// Validation
 pub mod validator;
-pub mod revoker;
 pub mod root_validator;
 pub mod trust_validator;
 
-/// This is a simple copy function. This should be replaced by memcpy or something...
+// Revokation
+pub mod revoker;
+
+/// This is a simple copy function. This should be equivalent to memcpy.
 pub fn copy_bytes(dest: &mut [u8], src: &[u8], start_dest: usize, start_src: usize, len: usize) {
-    for i in 0..len {
-        dest[start_dest + i] = src[start_src + i];
-    }
+    let end_dest = start_dest + len;
+    let end_src = start_src + len;
+    dest[start_dest..end_dest].copy_from_slice(&src[start_src..end_src]);
 }
 
 #[test]
@@ -75,11 +86,11 @@ fn test_readme_example() {
     use chrono::duration::Duration;
     use meta::Meta;
     use certificate::Certificate;
-    use validator::Validatable;
     use validator::Validator;
     use root_validator::RootValidator;
     use trust_validator::TrustValidator;
     use revoker::NoRevoker;
+    use fingerprint::Fingerprint;
 
     // create random master key
     let (mpk, msk) = ed25519::generate_keypair();
@@ -87,10 +98,10 @@ fn test_readme_example() {
     // create random certificate
     let meta = Meta::new_empty();
     let expires = UTC::now()
-                      .checked_add(Duration::days(90))
-                      .expect("Failed to add 90 days to expiration date.")
-                      .with_nanosecond(0)
-                      .unwrap();
+        .checked_add(Duration::days(90))
+        .expect("Failed to add 90 days to expiration date.")
+        .with_nanosecond(0)
+        .unwrap();
     let mut cert = Certificate::generate_random(meta, expires);
 
     // sign certificate with master key
@@ -106,8 +117,8 @@ fn test_readme_example() {
     // we could also use a TrustValidator. It's like RootValidator, but you can also give trusted
     // certificates. If the chain contains one of these, the upper certificates aren't checked
     // with the master public key. We can give any 32 byte key here, it doesn't matter.
-    let mut tcv = TrustValidator::new(&[0; 32], NoRevoker);
-    tcv.add_trusted_certificates(vec![cert.get_certificate_id()]);
+    let mut tcv = TrustValidator::new(NoRevoker);
+    tcv.add_trusted_certificates(vec![cert.fingerprint()]);
 
     // even though we gave a wrong master key, this certificate is valid, because it is trusted.
     assert_eq!(true, tcv.is_valid(&cert).is_ok());
@@ -117,7 +128,7 @@ fn test_readme_example() {
 
     // and sign the data with the certificate
     let signature = cert.sign(&data)
-                        .expect("This fails, if no private key is known to the certificate.");
+        .expect("This fails, if no private key is known to the certificate.");
 
     // the signature must be valid
     assert_eq!(true, cert.verify(&data, &signature));

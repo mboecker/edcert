@@ -1,3 +1,4 @@
+
 // The MIT License (MIT)
 //
 // Copyright (c) 2016 Marvin Böcker
@@ -45,6 +46,7 @@ pub fn generate_keypair() -> ([u8; PUBLIC_KEY_LEN], [u8; PRIVATE_KEY_LEN]) {
 
         // we can do this simple unsafe "lazy init",
         // because it would be OK to call init() twice.
+        // TODO: replace by that ONCE!() thingy.
 
         if !inited {
             inited = true;
@@ -71,7 +73,7 @@ pub fn sign(data: &[u8], private_key: &[u8]) -> Vec<u8> {
     let sk = ed25519::SecretKey::from_slice(private_key);
     let sk = sk.as_ref().unwrap();
 
-    let s = ed25519::sign(data, &sk);
+    let s = ed25519::sign(data, sk);
 
     let mut v = Vec::new();
     v.extend_from_slice(&s[0..64]);
@@ -87,10 +89,10 @@ pub fn verify(data: &[u8], signature: &[u8], public_key: &[u8]) -> bool {
 
     // allocate buffer on heap for signature and data.
     let mut vi = Vec::with_capacity(SIGNATURE_LEN + data.len());
-    vi.extend_from_slice(&signature);
+    vi.extend_from_slice(signature);
     vi.extend_from_slice(data);
 
-    let r = ed25519::verify(&vi, &pk);
+    let r = ed25519::verify(&vi, pk);
 
     match r {
         Err(_) => false,
@@ -154,12 +156,8 @@ fn test_testvectors() {
 
     let pbl = decode("77f48b59caeda77751ed138b0ec667ff50f8768c25d48309a8f386a2bad187fb");
 
-    let msg = decode("916c7d1d268fc0e77c1bef238432573c39be577bbea099893\
-                      6add2b50a653171ce18a542b0b7f96c1691a3be6031522894a8\
-                      634183eda38798a0c5d5d79fbd01dd04a8646d71873b77b2219\
-                      98a81922d8105f892316369d5224c9983372d2313c6b1f4556e\
-                      a26ba49d46e8b561e0fc76633ac9766e68e21fba7edca93c4c7\
-                      460376d7f3ac22ff372c18f613f2ae2e856af40");
+    let msg =
+        decode("916c7d1d268fc0e77c1bef238432573c39be577bbea0998936add2b50a653171ce18a542b0b7f96c1691a3be6031522894a8634183eda38798a0c5d5d79fbd01dd04a8646d71873b77b221998a81922d8105f892316369d5224c9983372d2313c6b1f4556ea26ba49d46e8b561e0fc76633ac9766e68e21fba7edca93c4c7460376d7f3ac22ff372c18f613f2ae2e856af40");
 
     let sig = decode("6bd710a368c1249923fc7a1610747403040f0cc30815a00f9ff548a896bbda0b4eb2ca19ebc\
                       f917f0f34200a9edbad3901b64ab09cc5ef7b9bcc3c40c0ff7509");

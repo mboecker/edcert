@@ -25,9 +25,6 @@
 
 use bytescontainer::BytesContainer;
 use certificate::Certificate;
-//use rustc_serialize::Encodable;
-//use rustc_serialize::Encoder;
-//use rustc_serialize::Decoder;
 
 /// This struct contains a ed25519 signature and a reference to the Certificate, which signed it.
 #[derive(Clone,RustcDecodable,RustcEncodable,Debug,PartialEq)]
@@ -77,6 +74,6 @@ impl Signature {
 
     /// This method will return the signature given by the parent.
     pub fn hash(&self) -> &Vec<u8> {
-        &self.hash.get()
+        self.hash.get()
     }
 }

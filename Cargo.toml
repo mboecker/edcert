@@ -1,6 +1,6 @@
 [package]
 name = "edcert"
-version = "8.2.0"
+version = "9.0.0"
 authors = [ "Marvin Böcker <marvin.boecker@udo.edu>" ]
 
 description = "A crate which can be used to sign and verify content based on Ed25519."
@@ -11,6 +11,7 @@ keywords = ["ed25519", "crypto", "cryptography", "security", "edcert"]
 license = "MIT"
 
 [dependencies]
+secrets = "^0.11.1"
 chrono = "^0.2"
 rustc-serialize = "^0.3"
 sodiumoxide = "^0.0.9"

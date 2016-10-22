@@ -74,6 +74,26 @@ let signature = cert.sign(&data)
 assert_eq!(true, cert.verify(&data, &signature));
 ```
 
+# Todo:
+
+There are always things to work on in cryptographic projects. Here are just some
+of these:
+
+- Add safe memory zeroing (using _that_ crate)
+- Add self-signed certificates*
+- Work with the Revokable/Validatable traits to ensure the revoke-check
+at type level
+
+\*: If you identify a certificate via a fingerprint that is say his public key,
+anyone could send you a version of that cerificate with whatever expiry date
+they wish. If you have that certificate in your trust store, you won't notice,
+because you only check if the fingerprint is known.
+
+To prevent this, we will only allow self-signed certificates in trust-stores
+and check if the signature is valid, because an attacker cannot recreate the
+signature.
+
+
 # License
 
 MIT

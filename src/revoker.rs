@@ -20,13 +20,33 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-//! This module provides a revoker, which can be used to check, if a certificate has been revoked.
+//! This module provides a revoker, which can be used to check if a certificate has been revoked.
 
-use validator::Validatable;
+use fingerprint::Fingerprint;
 
-/// This trait is used by a `CertificateValidator` to check, if a `Certificate` has been revoked.
+/// A type which indicates failure while checking for revokation.
+#[derive(Debug, Hash, PartialEq, Eq)]
+pub enum RevokeError {
+    /// The certificate was revoked.
+    Revoked,
+
+    /// The revoke server was not availiable.
+    ServerUnavailiable,
+}
+
+/// This trait must be implemented for types, which can be revoked.
+pub trait Revokable: Fingerprint {
+    /// This method can use the revoker to check if it has been revoked.
+    ///
+    /// **Don't call this method directly, it will be invoked by Revoker::is_revoked(_).**
+    fn self_check_revoked<R: Revoker>(&self, revoker: &R) -> Result<(), RevokeError>;
+}
+
+/// This trait is used by a `Validator` to check, if a `Certificate` has been revoked.
 pub trait Revoker {
-    fn is_revoked<T: Validatable>(&self, &T) -> Result<(), &'static str>;
+    /// This method should return Ok, if the `Certificate` has not been revoked, and Err(_), if it
+    /// has been.
+    fn is_revoked<F: Revokable + Fingerprint>(&self, &F) -> Result<(), RevokeError>;
 }
 
 /// Use this in a Validator to *NOT* check `Certificate`s whether they have been revoked.
@@ -35,7 +55,7 @@ pub trait Revoker {
 pub struct NoRevoker;
 
 impl Revoker for NoRevoker {
-    fn is_revoked<T>(&self, _: &T) -> Result<(), &'static str> {
+    fn is_revoked<F: Revokable + Fingerprint>(&self, _: &F) -> Result<(), RevokeError> {
         Ok(())
     }
 }

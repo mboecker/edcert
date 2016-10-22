@@ -28,6 +28,8 @@ use rustc_serialize::hex::FromHex;
 
 #[derive(Clone,Debug,PartialEq)]
 pub struct BytesContainer {
+    // TODO: replace with that secure memory container thingy. Also remove that horrible "safe"
+    // Drop implementation
     bytes: Vec<u8>,
 }
 
@@ -39,10 +41,6 @@ impl BytesContainer {
     pub fn get(&self) -> &Vec<u8> {
         &self.bytes
     }
-
-    // pub fn get_mut<'a>(&'a mut self) -> &'a mut Vec<u8> {
-    //     &mut self.bytes
-    // }
 
     pub fn to_bytestr(&self) -> String {
         let bytestr: Vec<String> = self.bytes.iter().map(|b| format!("{:02X}", b)).collect();
@@ -78,8 +76,11 @@ impl Encodable for BytesContainer {
 
 impl Drop for BytesContainer {
     fn drop(&mut self) {
-        for i in 0..self.bytes.len() {
-            self.bytes[i] = 0;
+        use std::ptr::write_volatile;
+        for a in &mut self.bytes {
+            unsafe {
+                write_volatile(a, 0xA0);
+            }
         }
     }
 }
