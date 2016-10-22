@@ -24,6 +24,11 @@
 //! This module contains a wrapper around the libsodium implementation of ed25519.
 //! It reduces the size of signatures to 64 byte.
 
+use std::sync::Once;
+use std::sync::ONCE_INIT;
+
+static START: Once = ONCE_INIT;
+
 use sodiumoxide;
 use sodiumoxide::crypto::sign::ed25519;
 
@@ -36,23 +41,12 @@ pub const PUBLIC_KEY_LEN: usize = 32;
 /// This is the length of a ed25519 signature.
 pub const SIGNATURE_LEN: usize = 64;
 
-static mut inited: bool = false;
-
 /// This method generates a random ed25519 keypair from a cryptographically secure source
 /// (on unix this is /dev/urandom). Returns (`public_key`, `private_key`).
 pub fn generate_keypair() -> ([u8; PUBLIC_KEY_LEN], [u8; PRIVATE_KEY_LEN]) {
-
-    unsafe {
-
-        // we can do this simple unsafe "lazy init",
-        // because it would be OK to call init() twice.
-        // TODO: replace by that ONCE!() thingy.
-
-        if !inited {
-            inited = true;
-            sodiumoxide::init();
-        }
-    }
+    
+    // Initialize the random number generator provided by libsodium.
+    START.call_once(|| { sodiumoxide::init(); });
 
     let (pk, sk) = ed25519::gen_keypair();
 
